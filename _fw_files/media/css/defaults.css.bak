@@ -1,0 +1,90 @@
+/* defaults */
+html, body {
+	width:100%;
+	height:100%;
+	margin:0;
+	padding:0;
+}
+body {
+	background: white;
+	color: black;
+}
+p,ol,ul,dl,blockquote,form,pre {margin-top: 0;}
+img {border: 0;}
+a, a:hover {text-decoration: underline;}
+a.tdn, a.tdn:hover {text-decoration: none;}
+a.hu {text-decoration: none;}
+a.hu:hover {text-decoration: underline;}
+table {
+	font-size: 100%;
+	border-collapse: collapse;
+	margin: 0;
+}
+td {padding: 0;}
+.contentZone table, table.p {
+	margin-bottom: 1em;
+	margin-bottom: expression('1.33em'); /*исключение для MSIE, в котором отступы у абзацев чуть больше*/
+}
+br {line-height: 0;}
+.contentZone br {line-height: 1em;}
+.spec {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+.autoW {width: auto;}
+.maxwh {
+	width: 100%;
+	height: 100%;
+}
+.maxw {width: 100%;}
+.maxh {height: 100%;}
+.minh {height: 1px;}
+.invsbl {display: none;}
+.ofh {overflow: hidden;}
+.abs {position: absolute;}
+.rel {position: relative;}
+.ftl {float: left;}
+.ftr {float: right;}
+.vat {vertical-align: top;}
+.vam {vertical-align: middle;}
+.vab {vertical-align: bottom;}
+.tal {text-align: left;}
+.tac {text-align: center;}
+.tar {text-align: right;}
+.cl {clear: left;}
+.cr {clear: right;}
+.cb {clear: both;}
+.nobr {white-space: nowrap;}
+div.clear, br.clear {
+	height: 1px;
+	clear: both;
+	overflow: hidden;
+}
+
+/*	
+	в ячейках таблиц в опере и MSIE 
+	идущие первыми заголовки не делают верхний отступ,
+	а идущие последними абзацы не делают нижний отступ.
+	но с объявленным doctype в firefox и mozilla этого не происходит,
+	поэтому появляется такое правило
+*/
+td > *:-moz-first-node {margin-top:0;}
+td > *:-moz-last-node {margin-bottom:0;}
+
+/* sifr */
+.sIFR-flash{visibility:visible !important;margin:0;}
+.sIFR-replaced{visibility:visible !important;font-size: 0 !important;}
+span.sIFR-alternate{position:absolute;left:0;top:0;width:0;height:0;display:block;overflow:hidden;}
+.sIFR-flash + div[adblocktab=true]{display:none !important;}
+
+/* debug */
+table.test1, table.test1 td {border: dotted 3px green;}
+table.test1 table, table.test1 table td {border: 0;}
+table.test2, table.test2 td {border: solid 1px #f0f;}
+table.test2 table, table.test2 table td {border: 0;}
+table.test3, table.test3 td {border: dotted 2px red;}
+table.test3 table, table.test3 table td {border: 0;}
+div.test1 {background: red !important;}
+div.test2 {background: yellow !important;}
+div.test3 {background: green !important;}

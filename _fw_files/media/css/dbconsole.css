@@ -1,0 +1,7 @@
+body {background-color:#999}
+#debugDbBox div.item{background-color:#fff; margin-top:2px}
+#debugDbBox span.title{font-weight:bold}
+#debugDbBox div.stack_item{}
+#debugDbBox div.stack_item span.file{font-style:italic}
+#debugDbBox div.stack_item div.args{display:none; margin-left:20px;background-color:#eee}
+#debugDbBox div.item div.result{display:none;margin-left:20px;background-color:#eee}

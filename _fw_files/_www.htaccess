@@ -1,0 +1,94 @@
+# AuthType Basic
+# AuthUserFile /path_to_file/.htpasswd
+# AuthName "beta-testers only"
+# Require valid-user
+
+# AddCharset windows-1251 html php
+AddCharset utf-8 html php
+AddDefaultCharset utf-8
+Options -Indexes
+
+RewriteEngine On
+
+# php_value upload_max_filesize 150M
+# php_value post_max_size 160M
+# php_value memory_limit 16M
+# php_value error_reporting 255
+# php_value short_open_tag 0
+
+# 
+# 
+# часть I
+# в ней происохдят стандартные перенаправления, ОБЩИЕ ДЛЯ ВСЕХ ПРОЕКТОВ
+# 
+# 
+
+# ----------- медиа и php-файлы которые не относятся к FW --------------
+
+# не должно быть перенаправлений lib -> __lib
+# следуют всегда испльзовать __lib во всех скриптах (js, php и пр.)
+# в __lib/.htaccess установлен глобальный запрет обработки вызыванных из браузера php-скриптов
+# причем, данный запрет локально отменяется для __lib/kcaptcha , __lib/ajexfilemanager
+
+# пропускаем без изменения все что начинается с двойного подчеркивания
+RewriteRule ^__ 	- 	[L]
+
+# запрещаем доступ к config.php
+# необходимо продублировать запрет в самом файле config.php на тот случай, 
+# когда файл .htaccess по какой-то причине отсутствует
+RewriteRule ^config\.php 	- 	[F]
+
+# разрешаем доступ к favicon.ico, robots.txt
+RewriteRule ^(favicon\.ico)$ - 	[L]
+RewriteRule ^(robots\.txt)$ - 	[L]
+
+# если была запрошена капча - перенаправляем картинку на скрипт из библиотеки
+RewriteRule ^(img|media/img)/captcha(\.[0-9]{10})?\.gif$ 	/__lib/kcaptcha/?%{QUERY_STRING} 	[L]
+
+# перенаправляем обновленные JS и CSS
+# затем пропускаем без изменения
+RewriteRule ^(media|js|css|img|u|xml|swf)/(.*)\.[0-9]{10}\.(js|css|swf|xml)$ 	/$1/$2.$3 	[L]
+RewriteRule ^(media|js|css|img|u|xml|swf)/ - 	[L]
+
+# ----------- php-файлы которые относятся к FW --------------
+
+# если запрашивается index.html, то отбрасываем его, но не делаем редирект
+RewriteCond %{REQUEST_URI} /index.html$
+RewriteRule (.*)index.html$ 	/$1 [L]
+
+# если в REQUEST_URI не содержится заключительный слэш, то добавляем его
+RewriteCond %{REQUEST_URI} !\.[a-z0-9]{2,4}$
+RewriteCond %{HTTP:x-requested-with} !XMLHttpRequest
+RewriteRule ^(.*[^\/])$ 	/$1/ [R,L]
+
+# определяем print-версию
+RewriteCond %{QUERY_STRING} ^print
+RewriteRule ^(.*)$ 	/$1?verprint=1&%{QUERY_STRING} 	[L]
+
+# определяем языковую версию
+RewriteRule ^~([a-z]+)~/(.*)$ 	/$2?__domain__=$1&%{QUERY_STRING} 	[L]
+
+# обрабатываем постраничную навигацию и итемы
+RewriteRule ^(.*)page([0-9]+)\.html$ 	/$1?page=$2&%{QUERY_STRING} 	[L]
+RewriteRule ^(.*)item([0-9]+)\.html$ 	/$1?item=$2&%{QUERY_STRING} 	[L]
+
+
+#
+#
+# часть II
+# в ней происходят частные перенаправления, 
+# касающиеся конкретных моделей
+#
+#
+
+
+#
+#
+# часть III
+# заключительное перенаправление - вызов основного обработчика
+# 
+#
+#
+
+# запускаем основной отбработчик, передавая ему запрошенный путь
+RewriteRule ^(.*)$ 	/admin/fw/init.php?__uri__=$1&%{QUERY_STRING}

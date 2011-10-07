@@ -1,0 +1,39 @@
+# AuthType Basic
+# AuthUserFile /path_to_file/.htpasswd
+# AuthName "administrators only"
+# Require valid-user
+
+# php_value upload_max_filesize 150M
+# php_value post_max_size 160M
+# php_value memory_limit 16M
+# php_value error_reporting 255
+# php_value short_open_tag 0
+
+RewriteEngine On
+
+# ----------- медиа и php-файлы которые не относятся к FW --------------
+
+# перенаправляем обновленные JS, CSS и SWF
+# здесь важно в редиректе не указать начальный "/"
+# потому что иначе редирект не сработает
+RewriteRule ^fw/media/(.*)\.[0-9]{10}\.(js|css|swf|xml)$ 	fw/media/$1.$2 	[L]
+RewriteRule ^fw/media/ - 	[L]
+# разрешаем доступ к иконкам в моделях
+RewriteRule ^models/([^/]+)/icon.(gif|png) - 	[L]
+
+# если в REQUEST_URI не содержится заключительный слэш, то добавляем его
+RewriteCond %{REQUEST_URI} !\.[a-z0-9]{2,4}$
+RewriteCond %{HTTP:x-requested-with} !XMLHttpRequest
+RewriteRule ^(.*[^\/])$ 	/admin/$1/ [R,L]
+
+# выполняем стандартные перенаправления
+RewriteRule 	^logout\.html$ 	?action=logout&%{QUERY_STRING} 	[L]
+RewriteRule 	^synchro/?$ 	?action=synchro&%{QUERY_STRING} 	[L]
+RewriteRule 	^clear_cache/?$ 	?action=clear_cache&%{QUERY_STRING} 	[L]
+RewriteRule 	^synchro/extra/?$ 	?action=extra&%{QUERY_STRING} 	[L]
+RewriteRule 	^(.*)edit/?$ 	$1?action=edit&%{QUERY_STRING} 	[L]
+RewriteRule 	^(.*)/table/?$ 	$1/?action=DBcreate&%{QUERY_STRING} 	[L]
+RewriteRule 	^(.*)page([0-9]+)\.html$ 	$1?page=$2&%{QUERY_STRING} 	[L]
+
+# передаем управление осноавному обработчику
+RewriteRule 	^(.*)$ 	fw/init.php?__uri__=admin/$1&%{QUERY_STRING} 	[L]

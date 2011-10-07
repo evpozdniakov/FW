@@ -1,0 +1,64 @@
+.hjScrollPaneContainer {
+	position: relative;
+	overflow: hidden;
+	z-index: 1;
+}
+
+.hjScrollPaneTrack {
+	position: absolute;
+	cursor: pointer;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	/*background: #aaa;*/
+}
+.hjScrollPaneDrag {
+	position: absolute;
+	/*background: #666;*/
+	cursor: pointer;
+	overflow: hidden;
+}
+.hjScrollPaneDragLeft {
+	position: absolute;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+}
+.hjScrollPaneDragRight {
+	position: absolute;
+	top: 0;
+	right: 0;
+	overflow: hidden;
+}
+a.hjScrollArrowLeft {
+	display: block;
+	position: absolute;
+	z-index: 1;
+	left: 0;
+	bottom: 0;
+	text-indent: -2000px;
+	overflow: hidden;
+	/*background-color: #666;*/
+	/*height: 9px;*/
+}
+a.hjScrollArrowLeft:hover {
+	/*background-color: #f60;*/
+}
+
+a.hjScrollArrowRight {
+	display: block;
+	position: absolute;
+	z-index: 1;
+	bottom: 0;
+	right: 0;
+	text-indent: -2000px;
+	overflow: hidden;
+	/*background-color: #666;*/
+	/*height: 9px;*/
+}
+a.hjScrollArrowRight:hover {
+	/*background-color: #f60;*/
+}
+a.hjScrollActiveArrowButton, a.hjScrollActiveArrowButton:hover {
+	/*background-color: #f00;*/
+}

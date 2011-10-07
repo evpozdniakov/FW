@@ -1,0 +1,41 @@
+/* defaults */
+html, body {margin: 0;padding: 0;width: auto;height: auto;}
+body {background: white;color: black;}
+img {border: 0;}
+a, a:hover {text-decoration: underline;}
+	p,
+	ol, ul, dl,
+	blockquote, pre,
+	form, table {margin-top: 0;margin-bottom: 0;}
+table {font-size: 100%;border-collapse: collapse;}
+small {font-size: 100%;}
+
+	*.contentZone p,
+	*.contentZone ol, *.contentZone ul, *.contentZone dl,
+	*.contentZone blockquote, *.contentZone pre,
+	*.contentZone form, *.contentZone table {margin-top: 1em;margin-bottom: 1em;}
+*.contentZone br {line-height: 1em;}
+*.contentZone sup {vertical-align: baseline;position: relative;top: -.7em;font-size: 70%;}
+*.contentZone small {font-size: x-small;}
+
+*.nobr {white-space: nowrap;}
+*.maxwh {width: 100%;height: 100%;}
+*.maxw {width: 100%;}
+*.maxh {height: 100%;}
+*.db {display: block;}
+*.dn {display: none;}
+*.ofh {overflow: hidden;}
+*.abs {position: absolute;}
+*.rel {position: relative;}
+*.ftl {float: left;}
+*.ftr {float: right;}
+*.vat {vertical-align: top;}
+*.vam {vertical-align: middle;}
+*.vab {vertical-align: bottom;}
+*.tal {text-align: left;}
+*.tac {text-align: center;}
+*.tar {text-align: right;}
+*.zm {zoom: 1;}
+
+div.clear, br.clear, span.clear {display: block;height: 1px;clear: both;overflow: hidden;line-height: 0;}
+*>div.clear, *>br.clear, *>span.clear {height: 0;}
