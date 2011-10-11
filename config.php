@@ -1,11 +1,8 @@
 <?php
 
-/*MySQL DB*/
-define('DBHOST','localhost');
-define('DBNAME','');
-define('DBUSER','');
-define('DBPASSWORD','');
-define('DBSETNAMES','utf8');
+
+
+/* ************ НАСТРОЙКИ САЙТА ************ */
 
 /*субдомены*/
 // будут ли использоваться субдомены 
@@ -36,8 +33,6 @@ if( $_SERVER['SERVER_NAME']=='site.local' ){
 }
 
 /*почта*/
-// кодировка сайта (windows-1251|UTF-8) нужна для корректной отправки писем
-define('SITE_ENCODING','UTF-8');
 define('FROM_NAME','Вася Пупкин');
 define('FROM_EMAIL','no-reply@site.ru');
 // следует ли записывать параметры отправляемых писем в лог /admin/_fw.log
@@ -49,11 +44,22 @@ define('SMS_SENDER','V.Pupkin');
 // следует ли записывать параметры отправляемых sms в лог /admin/_fw.log
 define('LOG_SMS',true);
 
-//шифрование
-define('CRYPT_METHOD','sha1');
 
-/*кэширование*/
-define('USE_CACHE',false);
+
+/* ************ СИСТЕМНЫЕ НАСТРОЙКИ ************ */
+
+/*MySQL DB*/
+define('DBHOST','localhost');
+define('DBNAME','');
+define('DBUSER','');
+define('DBPASSWORD','');
+define('DBSETNAMES','utf8');
+
+/*кодировка сайта*/
+define('SITE_ENCODING','UTF-8');
+
+/*шифрование*/
+define('CRYPT_METHOD','sha1');
 
 /*smarty*/
 // путь к библиотеке
@@ -65,6 +71,13 @@ define('SMARTY_SYNTAX', '{ }');
 
 /*библиотеки*/
 define('LIB_DIR',$_SERVER['DOCUMENT_ROOT'].'/../__lib/');
+
+
+
+/* ************ РАБОЧИЙ ПРОЦЕСС ************ */
+
+/*кэширование*/
+define('USE_CACHE',false);
 
 /*отладка*/
 // e-mail администратора (можно указать несколько адресов через пробел)
