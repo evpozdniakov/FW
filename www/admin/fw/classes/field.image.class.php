@@ -89,28 +89,39 @@ class ImageField extends FileField{
 
 	//-----------------------------------------------------------------
 
-	// используется в model.class.php
-	function _checkMatching($_relkey=''){
-		$result=true;
-		//определяем $match: если он не задан специально, то для ImageField мы определяем
-		//следующее правило - /\.(jpg|jpeg|gif|png)$/i
-		$match=defvar('/\.(jpg|jpeg|gif|png|swf)$/i',$this->match);
-		if(isset($_relkey) && isset($_FILES[$_relkey])){
-			$files=$_FILES[$_relkey];
+	/**
+	 * метод должен проверить размеры загруженного изображения.
+	 * в первую очередь проверяем файл из $_FILES
+	 * в последнюю очередь проверяем $hash['path2file']
+	 * поскольку этот параметр будет иметь корректное значение (полный путь к файлу) 
+	 * только в случае добавления файла "вручную"
+	 */
+	function _checkUploadedImageSize($hash){
+		$bool=false;
+		if(isset($hash['_relkey']) && isset($_FILES[$hash['_relkey']])){
+			$image_full_path=$_FILES[$hash['_relkey']]['tmp_name'][$this->db_column];
 		}elseif(isset($this->model_name) && isset($_FILES[$this->model_name])){
-			$files=$_FILES[$this->model_name];
-		}
-		//проверяем передавался ли файл
-		if(isset($files)){
-			$original_file_name=$files['name'][$this->db_column];
-			if($original_file_name!=''){
-				$result=(bool)preg_match($match,$original_file_name);
+			$image_full_path=$_FILES[$this->model_name]['tmp_name'][$this->db_column];
+		}elseif( !empty($hash['path2file']) ){
+			if( file_exists($hash['path2file']) ){
+				$image_full_path=$hash['path2file'];
 			}
 		}
-
-		return $result;
+		if(empty($image_full_path)){
+			$bool=true;
+		}else{
+			if( file_exists($image_full_path) ){
+				$size=getimagesize($image_full_path);
+				$expected_wh=explode('/',$this->sizes);
+				if(empty($expected_wh[0]) || $expected_wh[0]==$size[0]){
+					if(empty($expected_wh[1]) || $expected_wh[1]==$size[1]){
+						$bool=true;
+					}
+				}
+			}else{
+				_die('в _checkUploadedImageSize() не найден файл «'.$image_full_path.'»');
+			}
+		}
+		return $bool;
 	}
 }
-
-
-?>

@@ -47,16 +47,50 @@ class YamapField extends SubfieldsInterface {
 		* /
 	}*/
 
-	function getModelItemInitValue($_relkey_or_arr){
+	/**
+	 * переопределяемый в потомках метод, который возвращает 
+	 * инициализирующее значение для данного поля на основе $hash['init_values'],
+	 * для большинства полей это значение равно $hash['init_values'][$this->db_column]
+   * 
+	 * $hash['init_values'] - инициализирующий массив всех значений элемента модели
+	 */
+	function getModelItemInitValue($hash){
 		/*
-			переопределяемый в потомках метод, который возвращает 
-			инициализирующее значение для данного поля на основе $post, где
-			$post=(isset($_POST[$this->model_name]))?$_POST[$this->model_name]:$_relkey_or_arr;
+		если передан $hash['coords'], то происходит добавление координат с помощью ->gmi()
+		и нужно убедиться, что строка $hash['coords'] содержит два числа, похожие на широту и долготу
+		и затем вернуть их
+
+		если передан $hash['db_values'], то происходит воспроизведение элемента по id
+		и нужно вернуть имеющееся в БД значение
+
+		если передан $hash['init_values'], то происходит создание или изменение элемента
+		и нужно определить название нового файла, переданного в $_FILES
+		
+		если передан $hash['_relkey'], то поле является core
+		и нужно сделать все то же самое, что и при создании/изменении элемента,
+		только нужно иначе работать с $_FILES и $_POST
 		*/
-		$post=(isset($_POST[$this->model_name]))?$_POST[$this->model_name]:$_relkey_or_arr;
-		$result='';
-		if(!empty($post[$this->db_column.'_lat']) && !empty($post[$this->db_column.'_lng'])){
-			$result=sprintf('%s,%s',$post[$this->db_column.'_lat'],$post[$this->db_column.'_lng']);
+		$data=array();
+		if( !empty($hash['coords']) ){
+			$coords=explode(',',$hash['coords']);
+			$lat=floatval(trim($coords[0]));
+			$lng=floatval(trim($coords[1]));
+			$zoom=intval( defvar(15,trim($coords[2])) );
+			if( $lat && $lng && $zoom){
+				if( $lat>-90 && $lat<90 && $lng>-180 && $lng<180 && $zoom > 0 && $zoom < 19 ){
+					$data[$this->db_column.'_lat']=$lat;
+					$data[$this->db_column.'_lng']=$lng;
+					$data[$this->db_column.'_zoom']=$zoom;
+				}
+			}
+		}elseif( !empty($hash['init_values']) ){
+			$data=$hash['init_values'];
+		}elseif( !empty($hash['db_values']) ){
+			$data=$hash['db_values'];
+		}
+		if( !empty($data[$this->db_column.'_lat']) && !empty($data[$this->db_column.'_lng']) ){
+			$zoom=defvar(15,$data[$this->db_column.'_zoom']);
+			$result=sprintf('%s,%s,%d',$data[$this->db_column.'_lat'],$data[$this->db_column.'_lng'],$zoom);
 		}
 		return $result;
 	}
@@ -76,13 +110,28 @@ class YamapField extends SubfieldsInterface {
 		* /
 	}*/
 
-	/*function getSQLupdate($model_item_value){
-		/*
-			возвращает фрагмент sql-запроса для внесения данных в БД
-
-			$model_item_value - значение поля, которое нужно внести в БД
-		* /
-	}*/
+	/**
+	 * метод возвращает фрагмент sql-запроса для внесения данных в БД
+	 *
+	 * строка $init_string может содержать координаты через запятую
+	 */
+	function getSQLupdate($coords){
+		list($lat,$lng,$zoom)=explode(',',$coords);
+		//формируем фрагмент запроса
+		$result=sprintf('`%s`.`%s_lat`=%s,`%s`.`%s_lng`=%s,`%s`.`%s_zoom`=%s,'
+			,$this->model_name
+			,$this->db_column
+			,mysql_escape_string($lat)
+			,$this->model_name
+			,$this->db_column
+			,mysql_escape_string($lng)
+			,$this->model_name
+			,$this->db_column
+			,mysql_escape_string($zoom)
+		);
+		// $result='`'.$this->model_name.'`.`'.$this->db_column.'_lat`='.mysql_escape_string($lat).',`'.$this->model_name.'`.`'.$this->db_column.'_lng`='.mysql_escape_string($lng).',';
+		return $result;
+	}
 
 	/*function getSQLselect(){
 		/*

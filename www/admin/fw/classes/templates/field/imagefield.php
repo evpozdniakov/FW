@@ -4,7 +4,7 @@ $form_items=new FormItems();
 
 $field_name_modified=mb_substr($this->field_name,0,-1);
 
-if($inputValue['uri']!=''){
+if( !empty($inputValue['uri']) ){
 	$width=($inputValue['width']<=150)?$inputValue['width']:150;
 	if($inputValue['ext']=='swf'){
 		if( !defined('USE_SWFOBJECT') ){

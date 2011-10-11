@@ -72,17 +72,26 @@ class ManyToManyField extends Field{
 		* /
 	}*/
 
-	function getModelItemInitValue($model_item_init_values){
-		/*
-			переопределяемый в потомках метод, который возвращает 
-			инициализирующее значение для данного поля на основе $model_item_init_values,
-			для большинства полей это значение равно $model_item_init_values[$this->db_column]
-
-			$model_item_init_values - инициализирующий массив всех значений элемента модели, 
-			как правило, полученный из $_POST
-		*/
-		if($model_item_init_values[$this->db_column]!=''){
-			$result=implode(',',$model_item_init_values[$this->db_column]);
+	/**
+	 * переопределяемый в потомках метод, который возвращает 
+	 * инициализирующее значение для данного поля на основе $hash['model_item_init_values'],
+	 * для большинства полей это значение равно $hash['model_item_init_values'][$this->db_column]
+	 * 
+	 * $hash['model_item_init_values'] - инициализирующий массив всех значений элемента модели
+	 */
+	function getModelItemInitValue($hash){
+		// если передан $hash['get_stored_by_id']
+		// значит нужно забрать данные из БД
+		if( $hash['get_stored_by_id'] ){
+			$dbq=new DBQ('select @ from @ where @=?',$this->_getKey2(), $this->_getRelTableName(), $this->_getKey1(), $hash['get_stored_by_id']);
+			if( $dbq->rows ){
+				$result=kgi($this->_getKey2(), $dbq->items);
+			}
+		}else{
+			$model_item_init_values=$hash['init_values'];
+			if($model_item_init_values[$this->db_column]!=''){
+				$result=implode(',',$model_item_init_values[$this->db_column]);
+			}
 		}
 		return $result;
 	}
@@ -245,16 +254,20 @@ class ManyToManyField extends Field{
 		return $result;
 	}
 
-	function performFieldDataSave($item_id,$model_item_init_values){
-		//_print_r($model_item_init_values[$this->db_column]);_die('stop');
+	function performFieldDataSave($item_id,$init_values){
 		//удаляем из таблицы вспомогательной (связующей) таблицы все поля относящиеся к первому столбцу
 		$dbq=new DBQ('delete from @ where @=?',$this->_getRelTableName(),$this->_getKey1(),$item_id);
 		//добавляем поля заново
-		//_print_r($model_item_init_values['tasks_tmusers']);
-		$data_arr=$model_item_init_values[$this->db_column];
-		$fields_data=$this->_getFieldsData($item_id, $data_arr);
-		if($fields_data!=''){
-			$dbq=new DBQ('insert into @ @ values @', $this->_getRelTableName(), $this->_getFieldsList(), $fields_data);
+		if( !empty($init_values) ){
+			if( is_array($init_values) ){
+				$data_arr=$init_values;
+			}else{
+				$data_arr=explode(',',$init_values);
+			}
+			$fields_data=$this->_getFieldsData($item_id, $data_arr);
+			if( !empty($fields_data) ){
+				$dbq=new DBQ('insert into @ @ values @', $this->_getRelTableName(), $this->_getFieldsList(), $fields_data);
+			}
 		}
 	}
 

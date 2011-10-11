@@ -60,59 +60,69 @@ class FileField extends SubfieldsInterface{
 		* /
 	}*/
 
-	function getModelItemInitValue($_relkey_or_arr='',$path_to_file=''){
+	/**
+	 * переопределяемый в потомках метод, который возвращает 
+	 * инициализирующее значение для данного поля на основе $hash['init_values'],
+	 * для большинства полей это значение равно $hash['init_values'][$this->db_column]
+   * 
+	 * $hash['init_values'] - инициализирующий массив всех значений элемента модели
+	 */
+	function getModelItemInitValue($hash){
+		// _log('call getModelItemInitValue',$hash);
 		/*
-			переопределяемый в потомках метод, который возвращает 
-			инициализирующее значение для данного поля на основе $model_item_init_values,
-			для большинства полей это значение равно $model_item_init_values[$this->db_column]
+		если передан $hash['path2file'], то происходит добавление локального файла
+		и нужно определить и вернуть название нового файла
 
-			$model_item_init_values - инициализирующий массив всех значений элемента модели, 
-			как правило, полученный из $_POST
+		если передан $hash['db_values'], то происходит воспроизведение элемента по id
+		и нужно вернуть имеющееся в БД значение
+
+		если передан $hash['init_values'], то происходит создание или изменение элемента
+		и нужно определить название нового файла, переданного в $_FILES
+		
+		если передан $hash['_relkey'], то поле является core
+		и нужно сделать все то же самое, что и при создании/изменении элемента,
+		только нужно иначе работать с $_FILES и $_POST
 		*/
-		/****************************************************************
-		переданный в данную функцию $model_item_init_values игнорируется
-		ИНОГДА поле может являться core, о чем будет свидетельствовать непустой $_relkey_or_arr
-		ДОБАВИЛ в метод второй параметр $path_to_file чтобы появилась возможность загружать
-		файлы через консоль
-
-		параметр $_relkey_or_arr может быть передан из функции _validateFieldsDataPresence()
-		и тогда это на самом деле будет _input['_relkey']
-		****************************************************************/
-		if(isset($_FILES[$this->model_name])){
+		$result='';
+		if( !empty($hash['_relkey']) && !empty($_FILES[$hash['_relkey']]) ){
+			$files=$_FILES[$hash['_relkey']];
+			$post=$_POST[$hash['_relkey']];
+		}elseif( !empty($_FILES[$this->model_name]) ){
 			$files=$_FILES[$this->model_name];
-		}
-		$post=(isset($_POST[$this->model_name]))?$_POST[$this->model_name]:$_relkey_or_arr;
-		if(!is_array($_relkey_or_arr) && $_relkey_or_arr!=''){
-			$files=$_FILES[$_relkey_or_arr];
-			$post=$_POST[$_relkey_or_arr];
-		}
-		if( isset($path_to_file) && file_exists($path_to_file) ){
-			// если передан путь к файлу, то определяем возвращаемое значение из пути
-			$original_file_name=explode(DIRECTORY_SEPARATOR,$path_to_file);
+			// if( isset($_POST[$this->model_name]) ){
+				$post=$_POST[$this->model_name];
+			// }else{
+			// 	$post=$hash['init_values'];
+			// }
+		}elseif( !empty($hash['path2file']) && file_exists($hash['path2file']) ){
+			// возвращаем имя нового файла (каким оно было бы, если файл сохранили)
+			$original_file_name=explode(DIRECTORY_SEPARATOR,$hash['path2file']);
 			$original_file_name=last($original_file_name);
+			// $this->path это параметр поля в котором содержится путь к папке с файлами
 			$result=getNewFileName($original_file_name,$this->path);
-		}elseif( isset($files) && !empty($files['name'][$this->db_column]) ){
-			// инааче определяем возвращаемое значение из $files
-			$original_file_name=$files['name'][$this->db_column];
-			$result=getNewFileName($original_file_name,$this->path);
-		}elseif( isset($post[$this->db_column.'_del']) && $post[$this->db_column.'_del']=='on' && $this->blank ){
-			//возможно, что старый файл пожелали удалить, 
-			//тогда возвращаем строку "null", а не пустое значение,
-			//чтобы класс Model запусил метод getSQLupdate()
-			//но делаем это лишь если поле является НЕ обязательным
-			$result='null';
-		}else{
-			//также возможно, что файл уже сохранен, о чем будет свидетельствовать bak-поле
-			//тогда возвращаем значение из bak
-			if(isset($post[$this->db_column.'_name'])){
-				$result=$post[$this->db_column.'_name'];
-			}elseif(isset($post[$this->db_column.'_bak'])){
+		}elseif( !empty($hash['db_values']) ){
+			// возвращаем имя файла из БД
+			$result=$hash['db_values'][$this->db_column.'_name'];
+		}
+		if( empty($result) ){
+			if( isset($files) && !empty($files['name'][$this->db_column]) ){
+				// определяем имя нового файла из $files
+				$original_file_name=$files['name'][$this->db_column];
+				$result=getNewFileName($original_file_name,$this->path);
+			}elseif( isset($post[$this->db_column.'_del']) && $post[$this->db_column.'_del']=='on' && $this->blank===true ){
+				// возможно, что старый файл пожелали удалить, 
+				// тогда возвращаем строку "null", а не пустое значение,
+				// чтобы класс Model запусил метод getSQLupdate()
+				// но делаем это лишь если поле НЕ является обязательным
+				$result='null';
+			}elseif( isset($post[$this->db_column.'_bak']) ){
+				// происходит изменение элемента без изменения файла
 				$result=$post[$this->db_column.'_bak'];
 			}else{
+				// ничего не возвращаем
 				$result='';
 			}
 		}
-		
 		return $result;
 	}
 
@@ -133,34 +143,37 @@ class FileField extends SubfieldsInterface{
 		* /
 	}*/
 
-	function getSQLupdate($_relkey,$path_to_file=''){
-		/**_echo('$_relkey in getSQLupdate: '.$_relkey.'');*/
-		/*
-			возвращает фрагмент sql-запроса для внесения данных в БД
-
-			$model_item_value - значение поля, которое нужно внести в БД
-		*/
-		/****************************************************************
-		здесь мы должны сохранить файл, определить его размер, расширение и прочие атрибуты
-		и сформировать фрагмент sql-запроса на запись всех этих дел
-		кроме того, нам нужно удалить старый файл, если он был у элемента 
-		или если пользователь зачекал соответствующий чекбокс
-		****************************************************************/
+	/**
+	 * метод возвращает фрагмент sql-запроса для внесения данных в БД
+	 *
+	 * здесь мы должны сохранить файл, определить его размер, расширение и прочие атрибуты
+	 * и сформировать фрагмент sql-запроса на запись всех этих дел
+	 * кроме того, нам нужно удалить старый файл, если он был у элемента 
+	 * или если пользователь зачекал соответствующий чекбокс
+	 *
+	 * в первую очередь проверяем массив $_FILES
+	 * в последнюю очередь проверяем $hash['path2file']
+	 * поскольку этот параметр будет иметь корректное значение (полный путь к файлу) 
+	 * только в случае добавления файла "вручную"
+	 */
+	function getSQLupdate($hash){
 		$result='';
-		if( !empty($path_to_file) && file_exists($path_to_file) ){
-			$original_file_name=explode(DIRECTORY_SEPARATOR,$path_to_file);
-			$original_file_name=last($original_file_name);
-			$file_to_copy=$path_to_file;
-		}elseif( !empty($_relkey) && isset($_FILES[$_relkey]) ){
-			$files=$_FILES[$_relkey];
-			$post=$_POST[$_relkey];
+		if( !empty($hash['_relkey']) && isset($_FILES[$hash['_relkey']]) ){
+			$files=$_FILES[$hash['_relkey']];
+			$post=$_POST[$hash['_relkey']];
 		}elseif( isset($this->model_name) && isset($_FILES[$this->model_name]) ){
 			$files=$_FILES[$this->model_name];
 			$post=$_POST[$this->model_name];
+		}elseif( !empty($hash['path2file']) && file_exists($hash['path2file']) ){
+			$original_file_name=explode(DIRECTORY_SEPARATOR,$hash['path2file']);
+			$original_file_name=last($original_file_name);
+			$file_to_copy=$hash['path2file'];
 		}
 		if( isset($files) && !empty($files['name'][$this->db_column]) ){
 			//проверяем, загрузился ли файл во временную папку
-			if(empty($files['tmp_name'][$this->db_column])){_die(sprintf('файл «%s» не был загружен во временную папку, вероятно из-за ограничения PHP на размер загружаемого файла',$files['name'][$this->db_column]));}
+			if(empty($files['tmp_name'][$this->db_column])){
+				_log(sprintf('теоретически данная проблема должна выявляться в процессе валидации. файл «%s» не был загружен во временную папку, вероятно из-за ограничения PHP на размер загружаемого файла',$files['name'][$this->db_column]));
+			}
 			$original_file_name=$files['name'][$this->db_column];
 			$file_to_copy=$files['tmp_name'][$this->db_column];
 		}
@@ -184,15 +197,18 @@ class FileField extends SubfieldsInterface{
 			$f['upload_date']=date('Y-m-d');
 			//формируем фрагмент запроса
 			foreach($this->subfields as $key=>$value){
-				$result.='`'.$this->model_name.'`.`'.$this->db_column.'_'.$key.'` = "'.mysql_escape_string($f[$key]).'",';
+				$result.=e5csql('`@`.`@_@`=?,',$this->model_name,$this->db_column,$key,$f[$key]);
 			}
 			// если НЕ происходит процесс копирования
 			// то удаляем старый файл
 			// делаем это в самом конце, чтобы не повлиять на формирование нового названия файла
 			// для того, чтобы оно совпало с названием, сформированным в getModelItemInitValue()
-			if(intval(ORIGINAL_ITEM_ID)==0){
+			if( COPY_PROCESS!==true ){
 				if(isset($post) && $post[$this->db_column.'_bak']!=''){
 					$this->_unlinkOldFile($post[$this->db_column.'_bak']);
+				}else{
+					$dbq=new DBQ('select @ from @ where id=?',$this->db_column.'_uri',$this->model_name,ORIGINAL_ITEM_ID);
+					$this->_unlinkOldFile($dbq->item);
 				}
 			}
 		}elseif( isset($post) ){
@@ -210,7 +226,7 @@ class FileField extends SubfieldsInterface{
 						$result.='`'.$this->model_name.'`.`'.$this->db_column.'_'.$key.'` = "",';
 					}
 				}
-			}elseif(intval(ORIGINAL_ITEM_ID)>0){
+			}elseif( COPY_PROCESS===true ){
 				// происходит процесс копирования
 				// необходимо вытащить из БД данные по $subfields
 				// найти исходный файл, сделать его копию
@@ -241,21 +257,21 @@ class FileField extends SubfieldsInterface{
 		* /
 	}*/
 
+	/**
+	 * выполняет действие, 
+	 * предшествующее удалению элемента
+	 * 
+	 * $params_arr - массив значений из БД
+	 */
 	function beforeDelete($params_arr){
-		/*
-			выполняет действие, 
-			предшествующее удалению элемента
-
-			$params_arr - массив значений из БД
-		*/
 		//путь к файлу
-		if($params_arr[$this->db_column]!=''){
-			$file_uri=$params_arr[$this->db_column];
-		}elseif(isset($params_arr[$this->db_column.'_uri'])){
-			_log('странная ситуация - значение $params_arr[$this->db_column] пусто, а значение $params_arr[$this->db_column+_uri] не пусто!');
+		if( !empty($params_arr[$this->db_column]) ){
+			$file_uri=$this->path.$params_arr[$this->db_column];
+		}elseif( isset($params_arr[$this->db_column.'_uri']) ){
+			_log('странная ситуация - значение $params_arr[$this->db_column] пусто, а значение $params_arr[$this->db_column_uri] не пусто!');
 			$file_uri=$params_arr[$this->db_column.'_uri'];
 		}
-		if(isset($file_uri)){
+		if( isset($file_uri) ){
 			//удаляем файл с сервера
 			$this->_unlinkOldFile($file_uri);
 		}
@@ -311,27 +327,60 @@ class FileField extends SubfieldsInterface{
 
 	//-----------------------------------------------------------------
 
-	// используется в model.class.php
-	function _checkMatching($_relkey=''){
-		$result=true;
-		if($this->match!=''){
-			if($_relkey!=''){
-				$files=$_FILES[$_relkey];
-			}else{
-				$files=$_FILES[$this->model_name];
+	/**
+	 * метод должен проверить соответствие файла формату, 
+	 * заданному в регулярном выражении $this->match
+	 * в первую очередь проверяем массив $_FILES
+	 * в последнюю очередь проверяем $hash['path2file']
+	 * поскольку этот параметр будет иметь корректное значение (полный путь к файлу) 
+	 * только в случае добавления файла "вручную"
+	 */
+	function _checkMatching($hash){
+		$bool=true;
+		$match=$this->match;
+		if( empty($match) && is_a($this,'ImageField') ){
+			$match=defvar('/\.(jpg|jpeg|gif|png|swf)$/i',$this->match);
+		}
+		if( !empty($match) ){
+			if( !empty($hash['_relkey']) ){
+				$original_file_name=$_FILES[$hash['_relkey']]['name'][$this->db_column];
+			}elseif( isset($this->model_name) && isset($_FILES[$this->model_name]) ){
+				$original_file_name=$_FILES[$this->model_name]['name'][$this->db_column];
+			}elseif( !empty($hash['path2file']) ){
+				$original_file_name=explode(DIRECTORY_SEPARATOR,$hash['path2file']);
+				$original_file_name=last($original_file_name);
 			}
-			//проверяем передавался ли файл
-			if(!empty($files)){
-				$original_file_name=$files['name'][$this->db_column];
-				if($original_file_name!=''){
-					$result=(bool)preg_match($this->match,$original_file_name);
-				}
+			if( !empty($original_file_name) && $original_file_name!=='null' ){
+				$bool=(bool)preg_match($match,$original_file_name);
 			}
 		}
 
-		return $result;
+		return $bool;
+	}
+
+	/**
+	 * метод должен проверить загрузку файла.
+	 * в первую очередь проверяем массив $_FILES
+	 * в последнюю очередь проверяем $hash['path2file']
+	 * поскольку этот параметр будет иметь корректное значение (полный путь к файлу) 
+	 * только в случае добавления файла "вручную"
+	 */
+	function _checkLoading($hash){
+		$bool=true;
+		if( !empty($hash['_relkey']) && isset($_FILES[$hash['_relkey']]) ){
+			$files=$_FILES[$hash['_relkey']];
+		}elseif( isset($this->model_name) && isset($_FILES[$this->model_name]) ){
+			$files=$_FILES[$this->model_name];
+		}elseif( !empty($hash['path2file']) ){
+			if( mb_strpos($hash['path2file'],DIRECTORY_SEPARATOR)!==false && !file_exists($hash['path2file']) ){
+				$bool=false;
+			}
+		}
+		if( isset($files) && !empty($files['name'][$this->db_column]) ){
+			if( empty($files['tmp_name'][$this->db_column]) ){
+				$bool=false;
+			}
+		}
+		return $bool;
 	}
 }
-
-
-?>

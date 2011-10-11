@@ -75,37 +75,64 @@ class Field{
 		}
 	}
 
-	function getModelItemInitValueCommon($model_item_init_values,$precedent_values=''){
+	function getModelItemInitValueCommon($model_item_init_values,$model_item_db_values=''){
 		/*
 			то как это было сделано раньше - слишком сложно.
 			теперь будет все просто.
 			если в $model_item_init_values отсутствует поле id, то учитываем только $model_item_init_values
-			если в $model_item_init_values присутствует только id, то учитываем только $precedent_values
-			в остальных случаях отдаем $model_item_init_values, а если он пуст, то $precedent_values
+			если в $model_item_init_values присутствует только id, то учитываем только $model_item_db_values
+			в остальных случаях отдаем $model_item_init_values, а если он пуст, то $model_item_db_values
 			с одним маленьким исключением, которое касается обнуления существуюего значения
 		*/
 		if(!isset($model_item_init_values['id'])){
-			$result=$this->getModelItemInitValue($model_item_init_values);
+			$result=$this->getModelItemInitValue(array('init_values'=>$model_item_init_values));
 		}elseif( $model_item_init_values['id']>0 && count($model_item_init_values)==1 ){
-			if(is_array($this->subfields)){
-				$result=$this->getModelItemInitValue($model_item_init_values);
+			// _print_r('this',$this);
+			if( is_subclass_of($this,'SubfieldsInterface') ){
+				// передаю весь массив $model_item_db_values, чтобы метод мог вернуть нужное значение
+				$result=$this->getModelItemInitValue(array('db_values'=>$model_item_db_values));
+			}elseif( is_a($this,'ManyToManyField') ){
+				$result=$this->getModelItemInitValue(array('get_stored_by_id'=>$model_item_init_values['id']));
 			}else{
-				$result=$precedent_values[$this->db_column];
+				$result=$model_item_db_values[$this->db_column];
 			}
 		}else{
-			//здесь возникает тот случай, когда элемент изменяется
-			$new_value=$this->getModelItemInitValue($model_item_init_values);
-			if($new_value!=''){
-				//если имеется новое НЕПУСТОЕ значение, отличное от старого, нужно вернуть его
+			// здесь возникает тот случай, когда элемент изменяется
+			$data=array('init_values'=>$model_item_init_values,'db_values'=>$model_item_db_values);
+			if( is_a($this,'FileField') || is_subclass_of($this,'FileField') ){
+				if( is_string($model_item_init_values[$this->db_column]) && !empty($model_item_init_values[$this->db_column]) ){
+					$data['path2file']=$model_item_init_values[$this->db_column];
+				}
+			}elseif( is_a($this,'YamapField') || is_a($this,'GmapField') ){
+				if( is_string($model_item_init_values[$this->db_column]) && !empty($model_item_init_values[$this->db_column]) ){
+					$data['coords']=$model_item_init_values[$this->db_column];
+				}
+			}elseif( is_a($this,'ManyToManyField') ){
+				// если происходит сохранение элемента через форму на сайте
+				// и если в форме отсутствуют некоторые поля, то в случае с ManyToManyField
+				// необходимо получить значения из БД
+				if( empty($data['init_values'][$this->db_column]) && empty($data['db_values'][$this->db_column]) ){
+					if( EDIT_MODE===true && $this->editable ){
+						// исключение: изменение данных в админ-интерфейсе,
+						// причем само поле является редактируемым
+						// в этом случае мы не забираем данные из БД, а сохраняем пустые значения
+					}else{
+						$data=array('get_stored_by_id'=>$model_item_init_values['id']);
+					}
+				}
+			}
+			$new_value=$this->getModelItemInitValue($data);
+			// если имеется новое НЕПУСТОЕ значение, нужно вернуть его
+			if( !empty($new_value) ){
 				$result=$new_value;
-			}elseif(array_key_exists($this->db_column,$model_item_init_values)){
-				//если новое значение пусто, то возможно его захотели обнулить
-				//то есть нужно проверить наличие ключа $this->db_column в инит-массиве
-				//наличие ключа скажет о желании пользователя обнулить поле
+			// если новое значение пусто, то возможно его захотели обнулить
+			// то есть нужно проверить наличие ключа $this->db_column в инит-массиве
+			// наличие ключа скажет о желании пользователя обнулить поле
+			}elseif( array_key_exists($this->db_column,$model_item_init_values) ){
 				$result='';
+			//в последнем случае нужно вернуть предыдущее значение
 			}else{
-				//в последнем случае нужно вернуть предыдущее значение
-				$result=isset($precedent_values[$this->db_column])?$precedent_values[$this->db_column]:'';
+				$result=isset($model_item_db_values[$this->db_column])?$model_item_db_values[$this->db_column]:'';
 			}
 			$result=trim($result);
 		}
@@ -320,14 +347,15 @@ class Field{
 		return $result;
 	}
 
-	function getModelItemInitValue($model_item_init_values){
-		/*
-			переопределяемый в потомках метод, который возвращает 
-			инициализирующее значение для данного поля на основе $model_item_init_values,
-			для большинства полей это значение равно $model_item_init_values[$this->db_column]
-
-			$model_item_init_values - инициализирующий массив всех значений элемента модели
-		*/
+	/**
+	 * переопределяемый в потомках метод, который возвращает 
+	 * инициализирующее значение для данного поля на основе $hash['model_item_init_values'],
+	 * для большинства полей это значение равно $hash['model_item_init_values'][$this->db_column]
+   * 
+	 * $hash['model_item_init_values'] - инициализирующий массив всех значений элемента модели
+	 */
+	function getModelItemInitValue($hash){
+		$model_item_init_values=$hash['init_values'];
 		if(isset($model_item_init_values['id']) && $model_item_init_values['id']>0){
 			$result=(isset($model_item_init_values[$this->db_column]))?$model_item_init_values[$this->db_column]:'';
 		}elseif(isset($model_item_init_values[$this->db_column])){
@@ -519,30 +547,6 @@ class Field{
 		}
 		$unsigned=($this->unsigned)?' unsigned':'';
 		$result=$type.$maxlength.$unsigned;//_echo('result from _getSQLcolumnType:'.$result);
-		return $result;
-	}
-
-	function _checkUploadedImageSize($_relkey=''){
-		if( !is_a($this,'ImageField') ){return true;}
-		if(isset($_relkey) && isset($_FILES[$_relkey])){
-			$files=$_FILES[$_relkey];
-		}elseif(isset($this->model_name) && isset($_FILES[$this->model_name])){
-			$files=$_FILES[$this->model_name];
-		}
-		if(false
-			|| !isset($files)
-			|| empty($files['tmp_name'][$this->db_column])
-		){return true;}
-		if(file_exists($files['tmp_name'][$this->db_column])){
-			$result=false;
-			$size=getimagesize($files['tmp_name'][$this->db_column]);
-			$expectedwh=explode('/',$this->sizes);
-			if(empty($expectedwh[0]) || $expectedwh[0]==$size[0]){
-				if(empty($expectedwh[1]) || $expectedwh[1]==$size[1]){
-					$result=true;
-				}
-			}
-		}else{_die('в _checkUploadedImageSize() не найден файл «'.$files['tmp_name'][$this->db_column].'»');}
 		return $result;
 	}
 
@@ -763,14 +767,15 @@ class TextField extends Field{
 		return parent::getFormFieldHTMLtag($params_arr);
 	}
 
-	function getModelItemInitValue($model_item_init_values){
-		/*
-			переопределяемый в потомках метод, который возвращает 
-			инициализирующее значение для данного поля на основе $model_item_init_values,
-			для большинства полей это значение равно $model_item_init_values[$this->db_column]
-
-			$model_item_init_values - инициализирующий массив всех значений элемента модели
-		*/
+	/**
+	 * переопределяемый в потомках метод, который возвращает 
+	 * инициализирующее значение для данного поля на основе $hash['model_item_init_values'],
+	 * для большинства полей это значение равно $hash['model_item_init_values'][$this->db_column]
+   * 
+	 * $hash['model_item_init_values'] - инициализирующий массив всех значений элемента модели
+	 */
+	function getModelItemInitValue($hash){
+		$model_item_init_values=$hash['init_values'];
 		$result=$model_item_init_values[$this->db_column];
 		if( $this->editor && $this->allowtags=='yes' ){
 			$result=preg_replace('/<p>\s*\&nbsp;<\/p>/', '', $result);
@@ -792,7 +797,8 @@ class URLField extends Field{
 		}
 	}
 
-	function getModelItemInitValue($model_item_init_values){
+	function getModelItemInitValue($hash){
+		$model_item_init_values=$hash['init_values'];
 		//в том случае, если пользователь указал ссылку на сайт вроде www.site.com
 		//и при этом забыл указать http://
 		//то необходимо это сделать
@@ -876,7 +882,8 @@ class BooleanField extends Field{
 		}
 	}
 
-	function getModelItemInitValue($model_item_init_values){
+	function getModelItemInitValue($hash){
+		$model_item_init_values=$hash['init_values'];
 		/*
 			переопределяемый в потомках метод, который возвращает 
 			инициализирующее значение для данного поля на основе $model_item_init_values,
@@ -945,7 +952,8 @@ class DomainField extends Field{
 		$this->null=false;
 	}
 
-	function getModelItemInitValue($model_item_init_values){
+	function getModelItemInitValue($hash){
+		$model_item_init_values=$hash['init_values'];
 		//нужно сделать так, чтобы это поле можно было при необходимости переопределять
 		if($model_item_init_values[$this->db_column]!=''){
 			$result=$model_item_init_values[$this->db_column];
@@ -987,7 +995,7 @@ class IPField extends Field{
 	}
 
 	function getModelItemInitValue(){
-		return $_SERVER['REMOTE_ADDR'];
+		return $_SERVER['HTTP_X_REAL_IP'];
 	}
 }
 

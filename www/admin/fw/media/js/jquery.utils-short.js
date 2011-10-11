@@ -73,9 +73,7 @@ $.extend({
 	},
 	// расположен ли элемент в видимой части экрана
 	evElementCoords: function(html_elem){
-		if( html_elem.nodeType==3 ){
-			return $.evElementCoords(html_elem.parentNode);
-		}else if(html_elem.offsetTop || html_elem.offsetParent){
+		if(html_elem.offsetTop || html_elem.offsetParent){
 			var left=html_elem.offsetLeft, top=html_elem.offsetTop;
 			var offset_parent=html_elem.offsetParent;
 			while(true){
@@ -90,8 +88,6 @@ $.extend({
 				width: html_elem.offsetWidth,
 				height: html_elem.offsetHeight
 			}
-		}else{
-			// element html_elem is hidden
 		}
 	},
 	evScreenCoords: function(){

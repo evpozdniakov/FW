@@ -104,7 +104,7 @@ function _debugInitCheckTraceKey(){
 	if(!defined('DEBUG_TRACE_KEY'))
 		return false;
 
-	$cookie_value = md5(constant('DEBUG_TRACE_KEY').$_SERVER['REMOTE_ADDR']);
+	$cookie_value = md5(constant('DEBUG_TRACE_KEY').$_SERVER['HTTP_X_REAL_IP']);
 	if(isset($_GET['TRACE_KEY'])){
 		$trace_key = $_GET['TRACE_KEY'];
 		if($trace_key == DEBUG_TRACE_KEY) { // Ставим кукис-флаг отладки
@@ -216,9 +216,10 @@ function _connectDB(){
 }
 
 function _createGlobals(){
+	
 	if(!defined('SERVER_NAME')){
 		if(!defined('SERVER_NAME')){
-			define('SERVER_NAME',$_SERVER['HTTP_HOST']);
+			define('SERVER_NAME',$_SERVER['SERVER_NAME']);
 		}
 		// данный алгоритм не сработал на TEL
 		// поскольку $_SERVER['SERVER_NAME']==www2.tel.ru а $_SERVER['HTTP_HOST']==corp.tel.ru
@@ -263,7 +264,6 @@ function _createGlobals(){
 	//определяем принт-версию
 	$version=($_GET['verprint'])?'print':'';
 	define('VERSION',$version);
-	//_print_r($GLOBALS['vpath']);_print_r($GLOBALS['path']);
 }
 
 function _setDomain(){
@@ -355,14 +355,15 @@ function _tryUseCache(){
 
 function _startSessions(){
 	if(isset($GLOBALS['path'][1]) && $GLOBALS['path'][1]=='admin'){
-		//время хранения данных на сервере (сек.)
+		// время хранения данных на сервере (сек.)
 		ini_set('session.gc_maxlifetime', '86400');
-		//время хранения куки у клиента (сек.)
-		ini_set('session.cookie_lifetime', '0');//ноль означает пока не закроют браузер
-		//использовать только куки (1 или 0)
+		// время хранения куки у клиента (сек.)
+		// ноль — пока не закроют браузер
+		ini_set('session.cookie_lifetime', '0');
+		// использовать только куки (1 или 0)
 		ini_set('session.use_only_cookies', '1');
 	}
-	//если используются субдомены, то делаем общую сессию для всех субдоменов
+	// если используются субдомены, то делаем общую сессию для всех субдоменов
 	if(USE_SUBDOMAINS===true){
 		$cookie_domain='.'.removeSubdomain();
 		ini_set('session.cookie_domain',$cookie_domain);

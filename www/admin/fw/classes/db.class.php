@@ -55,13 +55,15 @@ class DB{
 			while($row=mysql_fetch_assoc($results)){
 				$this->items[]=$row;
 			}
-			$this->rows=count($this->items);
+			$this->rows=mysql_num_rows($results);
 			if($this->rows==1){
 				$this->line=$this->items[0];
 				if(count($this->items[0])==1){
 					$this->item=implode('',$this->items[0]);
 				}
 			}
+		}else{
+			$this->affected=mysql_affected_rows();
 		}
 	}
 

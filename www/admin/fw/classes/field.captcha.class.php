@@ -51,15 +51,15 @@ class CaptchaField extends Field {
 		* /
 	}*/
 
-	function getModelItemInitValue($model_item_init_values){
-		/*
-			переопределяемый в потомках метод, который возвращает 
-			инициализирующее значение для данного поля на основе $model_item_init_values,
-			для большинства полей это значение равно $model_item_init_values[$this->db_column]
-
-			$model_item_init_values - инициализирующий массив всех значений элемента модели, 
-			как правило, полученный из $_POST
-		*/
+	/**
+	 * переопределяемый в потомках метод, который возвращает 
+	 * инициализирующее значение для данного поля на основе $hash['model_item_init_values'],
+	 * для большинства полей это значение равно $hash['model_item_init_values'][$this->db_column]
+	 * 
+	 * $hash['model_item_init_values'] - инициализирующий массив всех значений элемента модели
+	 */
+	function getModelItemInitValue($hash){
+		$model_item_init_values=$hash['init_values'];
 		$result=$model_item_init_values[$this->db_column];
 
 		return $result;
