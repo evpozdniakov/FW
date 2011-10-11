@@ -1,12 +1,5 @@
 <?php
 
-// запрещаем прямой доступ к файлу, чтобы его нельзя было открыть через браузер
-// для безопасности, следует его размещать за пределами DOCUMENT_ROOT
-if(mb_strpos($_SERVER['REQUEST_URI'],'/config.php')!==false){
-	header($_SERVER["SERVER_PROTOCOL"].' 403 Forbidden');
-	exit();
-}
-
 /*MySQL DB*/
 define('DBHOST','localhost');
 define('DBNAME','');

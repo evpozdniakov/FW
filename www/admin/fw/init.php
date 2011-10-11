@@ -2,7 +2,7 @@
 
 //инклюдим конфиг и вспомогательные функции
 define('SITE_DIR',$_SERVER['DOCUMENT_ROOT']);
-include(SITE_DIR.'/config.php');
+include(SITE_DIR.'/../config.php');
 include(SITE_DIR.'/admin/fw/functions.php');
 
 //дебаг
