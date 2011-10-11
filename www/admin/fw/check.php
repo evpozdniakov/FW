@@ -1,6 +1,6 @@
 <?php
 
-include_once($_SERVER['DOCUMENT_ROOT'].'/config.php');
+include_once($_SERVER['DOCUMENT_ROOT'].'/../config.php');
 include_once($_SERVER['DOCUMENT_ROOT'].'/admin/fw/functions.php');
 include_once($_SERVER['DOCUMENT_ROOT'].'/admin/models/_settings.php');
 

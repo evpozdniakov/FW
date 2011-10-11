@@ -420,15 +420,10 @@ function _run(){
 		//если запрашивается файл из специальной папки __<имя папки>, то не запускаем файл
 		if(mb_substr($script_location,0,2)=='__'){return;}
 		//если файл в админ-зоне, то это может быть только php-файл, и у пользователя должна быть сессия
-		//исключением является файл /admin/fw/check.php или наличие ajax-запроса
 		if($GLOBALS['path'][1]=='admin' && mb_substr($script_location,-4)=='.php'){
-			if(false
-				|| isset($_SESSION['admin_user'])
-				|| $_SERVER['REQUEST_URI']=='/admin/fw/check.php'
-				|| IS_AJAX===true
-			){
+			if( isset($_SESSION['admin_user']) ){
 				include(SITE_DIR.$script_location);
-				//если файл все-таки был запущен, то прекращаем работу
+				// после того как файл был запущен, прекращаем работу
 				exit();
 			}
 		}else{
