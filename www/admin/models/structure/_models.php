@@ -95,7 +95,7 @@ class Structure extends Model{
 	}
 
 	function templateChoices(){//стандартная функция модели, нельзя удалять
-		$scriptLocation=TPL_DIR.'templates/_settings.php';
+		$scriptLocation=SMARTY_TPL_DIR.'/templates/_settings.php';
 		if(file_exists($scriptLocation)){include($scriptLocation);}else{die('Cant load '.$scriptLocation);}
 
 		return $GLOBALS['VIEWS'];

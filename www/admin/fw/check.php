@@ -11,7 +11,7 @@ include_once($_SERVER['DOCUMENT_ROOT'].'/admin/models/_settings.php');
 
 //список файлов, которые должны быть открыты на запись
 	$writable_ff=array(
-		TPL_DIR.'/templates_c/',
+		SMARTY_TPL_DIR.'/templates_c/',
 		$_SERVER['DOCUMENT_ROOT'].'/admin/_fw.log',
 		$_SERVER['DOCUMENT_ROOT'].'/admin/_php.log',
 		$_SERVER['DOCUMENT_ROOT'].'/admin/_sql.log',
@@ -42,7 +42,7 @@ include_once($_SERVER['DOCUMENT_ROOT'].'/admin/models/_settings.php');
 
 	$readable_ff=_checkAddFoldersAndFilesIntoArray($readable_ff,$_SERVER['DOCUMENT_ROOT'].'/admin/models/','tpl gif');
 	$readable_ff=_checkAddFoldersIntoArray($readable_ff,LIB_DIR);
-	$readable_ff=_checkAddFoldersIntoArray($readable_ff,TPL_DIR.'/templates/');
+	$readable_ff=_checkAddFoldersIntoArray($readable_ff,SMARTY_TPL_DIR.'/templates/');
 	
 	_checkRights($readable_ff,'is_readable');
 

@@ -66,9 +66,9 @@ define('LIB_DIR',$_SERVER['DOCUMENT_ROOT'].'/../__lib');
 
 /*smarty*/
 // путь к библиотеке
-define('SMARTY_DIR',LIB_DIR.'/Smarty-3.0.8/libs');
+define('SMARTY_LIBS',LIB_DIR.'/Smarty-3.0.8/libs');
 // путь к директории, в которой лежит папка с шаблонами
-define('TPL_DIR',$_SERVER['DOCUMENT_ROOT'].'/../__smarty');
+define('SMARTY_TPL_DIR',$_SERVER['DOCUMENT_ROOT'].'/../smarty');
 // синтаксис тегов шаблонов (left_delimiter и right_delimiter разделены пробелом)
 define('SMARTY_SYNTAX', '{ }');
 
