@@ -392,7 +392,7 @@ function _includeClasses(){
 		|| $GLOBALS['path'][1]!='admin' //для клиентской части
 		|| (DEBUG===true && DEBUG_DB===true) //для админки, если включена отладка ДБ
 	){
-		include(SMARTY_DIR.'Smarty.class.php');
+		include(SMARTY_DIR.'/Smarty.class.php');
 		include(SITE_DIR.'/admin/fw/classes/clientside.class.php');
 	}
 }
@@ -429,7 +429,7 @@ function _run(){
 		}else{
 			// если FW не используется, то просто подключаем smarty
 			if( USE_FW===false ){
-				include(SMARTY_DIR.'Smarty.class.php');
+				include(SMARTY_DIR.'/Smarty.class.php');
 				include(SITE_DIR.'/admin/fw/classes/clientside.class.php');
 				$GLOBALS['obj_client']=new ClientSide();
 			}

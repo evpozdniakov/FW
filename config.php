@@ -62,13 +62,13 @@ define('SITE_ENCODING','UTF-8');
 define('CRYPT_METHOD','sha1');
 
 /*библиотеки*/
-define('LIB_DIR',$_SERVER['DOCUMENT_ROOT'].'/../lib/');
+define('LIB_DIR',$_SERVER['DOCUMENT_ROOT'].'/../__lib');
 
 /*smarty*/
 // путь к библиотеке
-define('SMARTY_DIR',LIB_DIR.'Smarty-3.0.8/libs/');
+define('SMARTY_DIR',LIB_DIR.'/Smarty-3.0.8/libs');
 // путь к директории, в которой лежит папка с шаблонами
-define('TPL_DIR',$_SERVER['DOCUMENT_ROOT'].'/../smarty/');
+define('TPL_DIR',$_SERVER['DOCUMENT_ROOT'].'/../__smarty');
 // синтаксис тегов шаблонов (left_delimiter и right_delimiter разделены пробелом)
 define('SMARTY_SYNTAX', '{ }');
 
