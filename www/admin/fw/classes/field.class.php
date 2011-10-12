@@ -123,7 +123,7 @@ class Field{
 			}
 			$new_value=$this->getModelItemInitValue($data);
 			// если имеется новое НЕПУСТОЕ значение, нужно вернуть его
-			if( !empty($new_value) ){
+			if( $new_value!=='' ){
 				$result=$new_value;
 			// если новое значение пусто, то возможно его захотели обнулить
 			// то есть нужно проверить наличие ключа $this->db_column в инит-массиве
@@ -141,7 +141,6 @@ class Field{
 		if($result=='__null_option__'){
 			$result='';
 		}
-
 		return $result;
 	}
 
