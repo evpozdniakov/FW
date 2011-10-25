@@ -50,6 +50,10 @@ RewriteRule ^(img|media/img)/captcha(\.[0-9]{10})?\.gif$ 	/__lib/kcaptcha/?%{QUE
 RewriteRule ^(media|js|css|img|u|xml|swf)/(.*)\.[0-9]{10}\.(js|css|swf|xml)$ 	/$1/$2.$3 	[L]
 RewriteRule ^(media|js|css|img|u|xml|swf)/ - 	[L]
 
+RewriteRule ^PHPUnit-Test-Report/ - [L]
+RewriteRule ^tests/ - [L]
+RewriteRule ^tests2/ - [L]
+
 # ----------- php-файлы которые относятся к FW --------------
 
 # если запрашивается index.html, то отбрасываем его, но не делаем редирект
@@ -91,4 +95,4 @@ RewriteRule ^(.*)item([0-9]+)\.html$ 	/$1?item=$2&%{QUERY_STRING} 	[L]
 #
 
 # запускаем основной отбработчик, передавая ему запрошенный путь
-RewriteRule ^(.*)$ 	/admin/init.php?__uri__=$1&%{QUERY_STRING}
+RewriteRule ^(.*)$ 	/admin/fw/init.php?__uri__=$1&%{QUERY_STRING}

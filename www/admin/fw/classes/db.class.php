@@ -1,12 +1,11 @@
 <?php
 
 class DB{
-	function DB(){
-	}
+	private static $db_connect=NULL;
 
-	function connect(){
-		if(!array_key_exists('dbc',$GLOBALS) || !is_resource($GLOBALS['__dbc__'])){
-			$GLOBALS['__dbc__']=mysql_connect(DBHOST, DBUSER, DBPASSWORD) or _die(mysql_error());
+	public static function connect(){
+		if(!array_key_exists('dbc',$GLOBALS) || !is_resource(self::$db_connect)){
+			self::$db_connect=mysql_connect(DBHOST, DBUSER, DBPASSWORD) or _die(mysql_error());
 			mysql_select_db(DBNAME) or _die(mysql_error());
 			if(defined('DBSETNAMES')){
 				mysql_query('SET NAMES '.DBSETNAMES);
@@ -14,10 +13,10 @@ class DB{
 		}
 	}
 
-	function query($args){
+	public function query($args){
 		//если подключение еще не установлено, делаем это
-		if(!isset($GLOBALS['__dbc__']) || !is_resource($GLOBALS['__dbc__'])){
-			$this->connect();
+		if(!isset(self::$db_connect) || !is_resource(self::$db_connect)){
+			self::connect();
 		}
 		if(is_string($args)){
 			$args=func_get_args();// Получаем все аргументы функции.
@@ -35,11 +34,11 @@ class DB{
 		else $this->fulfil();
 	}
 
-	function fulfil(){
+	private function fulfil(){
 		$this->items=array();
 		$results=mysql_query($this->query);
 		if($results===false){
-			$this->error=mysql_error($GLOBALS['__dbc__']);
+			$this->error=mysql_error(self::$db_connect);
 			$this->error="\r\n".'>'.date('ymd H:i')."\t".'"'.$this->query.'"<-'.$this->error;
 			$log=file2str('/admin/','_sql.log');
 			$log.=$this->error;
@@ -67,7 +66,7 @@ class DB{
 		}
 	}
 
-	function getItem($name){//echo $name;
+	private function getItem($name){
 		if($this->rows>0){
 			foreach($this->items as $items){
 				$result=$items[$name];
@@ -76,7 +75,7 @@ class DB{
 		return $result;
 	}
 
-	function getItems($str){
+	private function getItems($str){
 		$str=str_replace(' ', '', $str); //на всякий избавляемся от пробелов
 		$arr=explode(",", $str);
 		foreach($this->items as $items){
@@ -87,14 +86,14 @@ class DB{
 		return $result;
 	}
 
-	function close(){//echo '[disconect '.$GLOBALS['__dbc__'].']';
-		if(isset($GLOBALS['__dbc__']) && is_resource($GLOBALS['__dbc__'])){
-			mysql_close($GLOBALS['__dbc__']);
-			unset($GLOBALS['__dbc__']);
+	public function close(){
+		if(isset(self::$db_connect) && is_resource(self::$db_connect)){
+			mysql_close(self::$db_connect);
+			unset(self::$db_connect);
 		}
 	}
 
-	function upDown($tabname, $id, $move, $condition=''){
+	public function upDown($tabname, $id, $move, $condition=''){
 		$this->query('select order_list from '.$tabname.' where id=?',$id);
 		$order_list=$this->getItem('order_list');
 		$condition=($condition!='')?$condition:'1';
@@ -130,7 +129,7 @@ class DB{
 		}
 	}
 
-	function reorder($tabname, $condition=''){
+	public function reorder($tabname, $condition=''){
 		$condition=($condition!='')?$condition:'1';
 		$this->query('select id from '.$tabname.' where '.$condition.' order by order_list');
 		$num=0;
@@ -142,7 +141,7 @@ class DB{
 		}
 	}
 
-	function lastId(){
+	public function lastId(){
 		$this->query('select last_insert_id()');
 		if($this->rows==1){
 			$result=$this->item;

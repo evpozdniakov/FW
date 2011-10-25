@@ -16,8 +16,8 @@ RewriteEngine On
 # перенаправляем обновленные JS, CSS и SWF
 # здесь важно в редиректе не указать начальный "/"
 # потому что иначе редирект не сработает
-RewriteRule ^media/(.*)\.[0-9]{10}\.(js|css|swf|xml)$ 	media/$1.$2 	[L]
-RewriteRule ^media/ - 	[L]
+RewriteRule ^fw/media/(.*)\.[0-9]{10}\.(js|css|swf|xml)$ 	fw/media/$1.$2 	[L]
+RewriteRule ^fw/media/ - 	[L]
 # разрешаем доступ к иконкам в моделях
 RewriteRule ^models/([^/]+)/icon.(gif|png) - 	[L]
 
@@ -36,4 +36,4 @@ RewriteRule 	^(.*)/table/?$ 	$1/?action=DBcreate&%{QUERY_STRING} 	[L]
 RewriteRule 	^(.*)page([0-9]+)\.html$ 	$1?page=$2&%{QUERY_STRING} 	[L]
 
 # передаем управление осноавному обработчику
-RewriteRule 	^(.*)$ 	init.php?__uri__=admin/$1&%{QUERY_STRING} 	[L]
+RewriteRule 	^(.*)$ 	fw/init.php?__uri__=admin/$1&%{QUERY_STRING} 	[L]

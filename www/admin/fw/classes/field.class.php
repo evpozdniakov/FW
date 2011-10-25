@@ -223,7 +223,7 @@ class Field{
 
 	function getFieldTagOrViewTemplate($params_arr){
 		//проверяем не переопределен ли стандартный шаблон
-		$view_template_file=SITE_DIR.'/admin/models/'.$this->model_name.'/'.$this->db_column.'.viewtemplate.php';
+		$view_template_file=sprintf('%s/%s/%s.viewtemplate.php', MODELS_DIR, $this->model_name, $this->db_column);
 		if(file_exists($view_template_file)){
 			//определяем значение, которое появится в поле формы
 			$inputValue=$params_arr[$this->db_column];
@@ -252,7 +252,7 @@ class Field{
 		//определяем значение, которое появится в поле формы
 		$inputValue=$params_arr[$this->db_column];
 		//подключаем файл со стандартным шаблоном
-		include(LIB_DIR.'/fw/classes/templates/field/'.$this->__name__.'.php');//return 'поле формы со значением <pre>'.e5c($data).'</pre><br>';
+		include(FW_DIR.'/classes/templates/field/'.$this->__name__.'.php');//return 'поле формы со значением <pre>'.e5c($data).'</pre><br>';
 
 		return $result;
 	}
@@ -521,7 +521,7 @@ class Field{
 	//=================================================================
 
 	function _getHTML($inputValue){
-		include(LIB_DIR.'/fw/classes/templates/field/'.$this->className.'.php');
+		include(FW_DIR.'/classes/templates/field/'.$this->className.'.php');
 		return $result;
 	}
 
@@ -998,16 +998,16 @@ class IPField extends Field{
 	}
 }
 
-include(LIB_DIR.'/fw/classes/interface.subfields.class.php');
-include(LIB_DIR.'/fw/classes/field.tree.class.php');
-include(LIB_DIR.'/fw/classes/field.foreignkey.class.php');
-include(LIB_DIR.'/fw/classes/field.order.class.php');
-include(LIB_DIR.'/fw/classes/field.date.class.php');
-include(LIB_DIR.'/fw/classes/field.datetime.class.php');
-include(LIB_DIR.'/fw/classes/field.file.class.php');
-include(LIB_DIR.'/fw/classes/field.image.class.php');
-include(LIB_DIR.'/fw/classes/field.flv.class.php');
-include(LIB_DIR.'/fw/classes/field.manytomany.class.php');
-include(LIB_DIR.'/fw/classes/field.captcha.class.php');
-include(LIB_DIR.'/fw/classes/field.gmap.class.php');
-include(LIB_DIR.'/fw/classes/field.yamap.class.php');
+include(FW_DIR.'/classes/interface.subfields.class.php');
+include(FW_DIR.'/classes/field.tree.class.php');
+include(FW_DIR.'/classes/field.foreignkey.class.php');
+include(FW_DIR.'/classes/field.order.class.php');
+include(FW_DIR.'/classes/field.date.class.php');
+include(FW_DIR.'/classes/field.datetime.class.php');
+include(FW_DIR.'/classes/field.file.class.php');
+include(FW_DIR.'/classes/field.image.class.php');
+include(FW_DIR.'/classes/field.flv.class.php');
+include(FW_DIR.'/classes/field.manytomany.class.php');
+include(FW_DIR.'/classes/field.captcha.class.php');
+include(FW_DIR.'/classes/field.gmap.class.php');
+include(FW_DIR.'/classes/field.yamap.class.php');

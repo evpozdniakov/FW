@@ -23,7 +23,7 @@ class ManyToManyField extends Field{
 			$params_arr - массив значений всех свойств элемента модели
 		*/
 		//создаем объект привязанной модели
-		$view_template_file=SITE_DIR.'/admin/models/'.$this->model_name.'/'.$this->db_column.'.viewtemplate.php';
+		$view_template_file=sprintf('%s/%s/%s.viewtemplate.php', MODELS_DIR, $this->model_name, $this->db_column);
 		if(file_exists($view_template_file)){
 			//подключаем файл со специальным шаблоном
 			$form_items=new FormItems();
@@ -42,7 +42,7 @@ class ManyToManyField extends Field{
 					$result_elements[]=$subresult;
 				}
 			}
-			include(LIB_DIR.'/fw/classes/templates/field/'.$this->__name__.'.php');
+			include(FW_DIR.'//classes/templates/field/'.$this->__name__.'.php');
 		}
 		return $result;
 	}

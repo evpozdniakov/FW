@@ -354,20 +354,20 @@ class _Models extends Model{
 		//создаем содержимое _models.php
 		$file_new_content=$this->_getNewModelsPhpContent();
 		//создаем новую папку 
-		if(!file_exists(SITE_DIR.'/admin/models/'.$this->name)){
-			mkdir(SITE_DIR.'/admin/models/'.$this->name,0777);
+		if( !file_exists(sprintf('%s/%s',MODELS_DIR,$this->name)) ){
+			mkdir(sprintf('%s/%s',MODELS_DIR,$this->name), 0777);
 		}
 		//создаем в ней новый файл
-		fileWrite('/admin/models/'.$this->name.'/','_models.php',$file_new_content,0775);
+		fileWrite(sprintf('%s/%s',MODELS_DIR,$this->name), '_models.php', $file_new_content, 0775);
 	}
 
 	function _editModelsPhp(){
 		//получаем измененное содержимое _models.php
 		$file_changed_content=$this->_getModelsPhpChange();
 		//переименовываем папку модели
-		rename(SITE_DIR.'/admin/models/'.$GLOBALS['model_name_bak'],SITE_DIR.'/admin/models/'.$this->name);
+		rename(sprintf('%s/%s',MODELS_DIR,$GLOBALS['model_name_bak']), sprintf('%s/%s',MODELS_DIR,$this->name));
 		//записываем в нее файл
-		fileWrite('/admin/models/'.$this->name.'/','_models.php',$file_changed_content);
+		fileWrite(sprintf('%s/%s/',MODELS_DIR,$this->name), '_models.php', $file_changed_content);
 	}
 
 	function _getNewModelsPhpContent(){//_print_r($this);_die('end');
@@ -385,16 +385,16 @@ class _Models extends Model{
 
 	function _getModelsPhpChange(){
 		//путь к папке с текущим _models.php
-		$dir='/admin/models/'.$GLOBALS['model_name_bak'].'/';
+		$dir=sprintf('%s/%s/', MODELS_DIR, $GLOBALS['model_name_bak']);
 		//считываем содержимое файла
-		$_models_php=file2str($dir,'_models.php');
+		$_models_php=file2str($dir,'/_models.php');
 		//искомая подстрока с объявлением класса
 		$class_declaration='class';
 		//ее позиция
 		$class_declaration_pos=mb_strpos($_models_php,$class_declaration);
 		//позиция имени класса
 		$class_name_pos=mb_strpos($_models_php,ucwords($GLOBALS['model_name_bak']),$class_declaration_pos);
-		if( !$class_name_pos ){_die('не могу найти объявление класса «'.$GLOBALS['model_name_bak'].'» в файле '.$dir.'_models.php');}
+		if( !$class_name_pos ){_die('не могу найти объявление класса «'.$GLOBALS['model_name_bak'].'» в файле '.$dir.'/_models.php');}
 		$start=mb_substr($_models_php,0,$class_name_pos);
 		$end=mb_substr($_models_php,$class_name_pos+mb_strlen($GLOBALS['model_name_bak']));
 		//формируем содержимое файла целиком
@@ -404,7 +404,7 @@ class _Models extends Model{
 
 	function _changeSettingsPhp(){
 		//считываем файл в переменную
-		$_settings_php=file2str('/admin/models/','_settings.php');
+		$_settings_php=file2str(MODELS_DIR, '_settings.php');
 		//находим позицию объявление массива $GLOBALS['INSTALLED_APPS']
 		$installed_apps_declaration='$GLOBALS[\'INSTALLED_APPS';
 		$installed_apps_start_pos=mb_strpos($_settings_php,$installed_apps_declaration);
@@ -424,7 +424,7 @@ class _Models extends Model{
 		//формируем новое содержимое файла
 		$file_new_content=$this->_getSettingsPhpContent($_settings_php,$open_brace_position,$close_brace_position);
 		//перезаписываем файл
-		fileWrite('/admin/models/','_settings.php',$file_new_content);
+		fileWrite(MODELS_DIR, '_settings.php', $file_new_content);
 	}
 
 	function _renameModelTable(){
@@ -478,31 +478,32 @@ class _Models extends Model{
 		//если текущая модель является служебной, то обрываем работу метода
 		if(mb_substr($this->name,0,1)=='_'){return;}
 		if( !empty($_POST['_models']['icon_from_lib']) || !empty($this->icon) ){
-			try2unlink('/admin/models/'.$this->name, 'icon.gif');
-			try2unlink('/admin/models/'.$this->name, 'icon.png');
+			$model_obj=gmo($this->name);
+			try2unlink($model_obj->__gif__);
+			try2unlink($model_obj->__png__);
 		}
 		if(!empty($_POST['_models']['icon_from_lib'])){
 			$icon_remote_path=$_POST['_models']['icon_from_lib'];
 			$icon_contents=file_get_contents($icon_remote_path);
 			// сохраняем удаленную иконку
 			if( !empty($icon_contents) ){
-				$icon_rsrc=fopen(SITE_DIR.'/admin/models/'.$this->name.'/icon.png','w');
+				$icon_rsrc=fopen($model_obj->__png__, 'w');
 				fwrite($icon_rsrc, $icon_contents);
 				fclose($icon_rsrc);
 			}
 		}elseif($this->icon){
 			$ext=last(explode('.', $this->icon));
-			copy(SITE_DIR.'/admin/fw/media/img/'.$this->icon, SITE_DIR.'/admin/models/'.$this->name.'/icon.'.$ext);
+			copy(SITE_DIR.'/admin/fw/media/img/'.$this->icon, sprintf('%s/%s/icon.%s',MODELS_DIR,$this->name,$ext));
 		}
 	}
 
 	function _removeModelsPhp(){
 		//путь к папке с текущим _models.php
-		$dir='/admin/models/'.$this->name.'/';
+		$dir=sprintf('%s/%s', MODELS_DIR, $this->name);
 		//убиваем файл
-		if( !unlink(SITE_DIR.$dir.'_models.php') ){_log('не могу удалить файл «'.$dir.'_models.php»');}
+		if( !unlink($dir.'/_models.php') ){_log('не могу удалить файл «'.$dir.'/_models.php»');}
 		//и папку
-		if( !rmdir(SITE_DIR.$dir) ){_log('не могу удалить папку «'.$dir.'»');}
+		if( !rmdir($dir) ){_log('не могу удалить папку «'.$dir.'»');}
 	}
 
 	//=================================================================

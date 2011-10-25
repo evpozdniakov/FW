@@ -24,7 +24,7 @@ class TreeField extends Field {
 		//вытаскиваем рекурсивно дерево элементов
 		$elements_tree=$this->getRecElementsTree($obj_model,$params_arr['id']);
 		//подключаем файл с шаблоном
-		include(LIB_DIR.'/fw/classes/templates/field/'.$this->__name__.'.php');
+		include(FW_DIR.'/classes/templates/field/'.$this->__name__.'.php');
 		//return 'поле формы со значением <pre>'.e5c($data).'</pre><br>';
 
 		return $result;

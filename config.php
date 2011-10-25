@@ -7,7 +7,7 @@
 /*субдомены*/
 // будут ли использоваться субдомены 
 // если false, то все остальные опции — SUBDOMAINS_LIST DEFAULT_SUBDOMAIN HIDE_DEFAULT_SUBDOMAIN — не имеют значения
-define('USE_SUBDOMAINS',true);
+define('USE_SUBDOMAINS',false);
 // список используемых субдоменов (через пробел)
 // например, если будут использоваться www.site.ru и sale.site.ru
 // то нужно указать 'www sale'
@@ -50,9 +50,9 @@ define('LOG_SMS',true);
 
 /*MySQL DB*/
 define('DBHOST','localhost');
-define('DBNAME','');
-define('DBUSER','');
-define('DBPASSWORD','');
+define('DBNAME','starter');
+define('DBUSER','starter');
+define('DBPASSWORD','starter');
 define('DBSETNAMES','utf8');
 
 /*кодировка сайта*/
@@ -62,7 +62,7 @@ define('SITE_ENCODING','UTF-8');
 define('CRYPT_METHOD','sha1');
 
 /*библиотеки*/
-define('LIB_DIR',SITE_DIR.'/../__lib');
+define('LIB_DIR',SITE_DIR.'/../lib');
 
 /*smarty*/
 // путь к библиотеке
@@ -95,14 +95,12 @@ define('ADMIN_EMAIL','admin@site.ru');
 // 1. никакие сообщения об ошибках не выводятся на экран
 // 2. не работает функция _log()
 define('DEBUG',true);
-// если режим отладки включен, то можно настроить опции:
+// если режим отладки включен, то можно настроить опции, 
+// перечислив их в DEBUG_OPTIONS:
 // DB - включить отладку запросов к DB
 // DB_SAVE_STACK - при отладке DB сохранять стек вызовов функций
 // DB_INCLUDE_RES - при отладке DB накапливать и выводить результаты запросов
-// SMARTY_CONSOLE_ON - включить консоль Smarty
+// EMAIL_ERROR - дублировать на адрес ADMIN_EMAIL записи, поступающие в логи
 // TRACE_ON_DIE - вывести отладку после отработки die()
 // DISPLAY_PHP_ERRORS - вывести ошибки php на экран (в любом случае выводятся в /admin/_php.log)
-// START_ON_KEY - начать отладку только после получения $_GET['TRACE_KEY']==DEBUG_TRACE_KEY 
-//                отключить отладку можно передав $_GET['TRACE_KEY']==false (другие значения могут иметь специфическое назначение)
-//                если опция отсутствует, то управление отладкой (вкл/выкл) осуществляется только через DEBUG
 define('DEBUG_OPTIONS', 'DISPLAY_PHP_ERRORS TRACE_ON_DIE');

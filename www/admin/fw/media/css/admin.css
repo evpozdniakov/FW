@@ -24,7 +24,7 @@ a, a:hover {color: #f98315;}
 #header {position: relative;width: 100%;height: 80px;background-color: #000;}
 #logo {position: absolute;left: 0;top: 0;width: 150px;height: 80px;background-repeat: no-repeat;background-position: center;}
 #logo a {display: block;width: 150px;height: 80px;}
-#ajaxLoader {position: absolute;left: 0;top: 0;display: none;width: 150px;height: 80px;background: #000 url(/admin/media/img/ajax-loader.gif) no-repeat center;opacity: 0.5;}
+#ajaxLoader {position: absolute;left: 0;top: 0;display: none;width: 150px;height: 80px;background: #000 url(../img/ajax-loader.gif) no-repeat center;opacity: 0.5;}
 #domainsList {margin: 0 0 0 150px;height: 80px;background-color: #000;}
 #domainsList div.pad {padding: 48px 14px 10px 150px;height: 22px;line-height: 22px;}
 #domainsList strong {display: block;float: left;}
@@ -33,8 +33,8 @@ a, a:hover {color: #f98315;}
 #domainsList strong a:hover {font-weight: bold;text-decoration: none;}
 #domainsList strong b,
 #domainsList strong a b {color: #fff;}
-#domainsList strong {margin: 0;padding:0 14px;background: url(/admin/media/img/arr-black.gif) no-repeat 0 .8em;}
-#domainsList strong.group {background: url(/admin/media/img/arr-orange.gif) no-repeat 4px .8em;} 
+#domainsList strong {margin: 0;padding:0 14px;background: url(../img/arr-black.gif) no-repeat 0 .8em;}
+#domainsList strong.group {background: url(../img/arr-orange.gif) no-repeat 4px .8em;} 
 
 #modelsList {float: left;width: 150px;background-color: #000;}
 #modelsList div.pad {padding: 10px 14px 100px 14px;}
@@ -52,7 +52,7 @@ a, a:hover {color: #f98315;}
 #modelsList strong.active span.iconGIF {background-position: 0 -100px;}
 #modelsList strong span.iconPNG {background-color: #f98315;}
 #modelsList strong.active span.iconPNG {background-color: #fff;}
-/*#modelsList strong.group {background: url(/admin/media/img/arr-orange.gif) no-repeat 4px .8em;}*/
+/*#modelsList strong.group {background: url(../img/arr-orange.gif) no-repeat 4px .8em;}*/
 
 
 
@@ -71,16 +71,16 @@ div.adminDropDown li a
 #modelItemsList div.pad {padding: 47px 14px;}
 /*#modelItemsList div.offset {margin: 47px 5px 45px 52px;padding:0;list-style-type:none;}*/
 #modelItemsList ul.itemsList {position: relative;margin: 0;padding:0;list-style-type:none;}
-#modelItemsList ul.itemsList span.li {display: block;margin: 0;padding: 0 0 4px 21px;line-height: 1em;background: url(/admin/media/img/bullit.gif) no-repeat 0 .4em;}
-#modelItemsList ul.itemsList span.empty {display: block;margin: 0;padding: 2px 0 2px 21px;line-height: 1em;background: url(/admin/media/img/folder.gif) no-repeat 0 0;}
+#modelItemsList ul.itemsList span.li {display: block;margin: 0;padding: 0 0 4px 21px;line-height: 1em;background: url(../img/bullit.gif) no-repeat 0 .4em;}
+#modelItemsList ul.itemsList span.empty {display: block;margin: 0;padding: 2px 0 2px 21px;line-height: 1em;background: url(../img/folder.gif) no-repeat 0 0;}
 #modelItemsList ul.itemsList div.children {padding: 0 0 4px;}
 #modelItemsList ul.itemsList div.children ul {margin: 4px 0 10px 21px;}
 #modelItemsList ul.itemsList div.children a.plus,
 #modelItemsList ul.itemsList div.children a.minus {display: block;position: absolute;width: 15px;height: 13px;}
 #modelItemsList ul.itemsList div.children a.plus span,
 #modelItemsList ul.itemsList div.children a.minus span {display: none;}
-#modelItemsList ul.itemsList div.children a.plus {background: url(/admin/media/img/folder+.gif) no-repeat 0 0;}
-#modelItemsList ul.itemsList div.children a.minus {background: url(/admin/media/img/folder-.gif) no-repeat 0 0;}
+#modelItemsList ul.itemsList div.children a.plus {background: url(../img/folder+.gif) no-repeat 0 0;}
+#modelItemsList ul.itemsList div.children a.minus {background: url(../img/folder-.gif) no-repeat 0 0;}
 #modelItemsList ul.itemsList div.children div.nobullet span.li {background: transparent;display: inline;}
 #modelItemsList a {color: #000;text-decoration: none;}
 

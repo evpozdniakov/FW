@@ -224,12 +224,12 @@ class _ModelsFields extends Model{
 		$file_changed_content=$this->_getModelsPhpChange($model_name);
 		//_echo(e5c($file_changed_content));_die('stop');
 		//записываем новое содержимое
-		fileWrite('/admin/models/'.$model_name.'/','_models.php',$file_changed_content);
+		fileWrite(sprintf('%s/%s',MODELS_DIR,$model_name), '_models.php', $file_changed_content);
 	}
 
 	function _getModelsPhpChange($model_name){
 		//путь к папке с текущим _models.php
-		$dir='/admin/models/'.$model_name.'/';
+		$dir=sprintf('%s/%s', MODELS_DIR, $model_name);
 		//считываем содержимое файла
 		$_models_php=file2str($dir,'_models.php');
 		//искомая подстрока с объявлением функции init_fields

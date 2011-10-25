@@ -9,10 +9,10 @@ class Admin{
 			$this->logout();
 		}elseif( !$this->userIsLogged() ){
 			//подключаем внешний вид страницы авторизации
-			include(LIB_DIR.'/fw/classes/templates/admin/login.php');
+			include(FW_DIR.'/classes/templates/admin/login.php');
 			$this->body=$result;
 			//определяем весь документ
-			include(LIB_DIR.'/fw/classes/templates/admin/doctype.php');
+			include(FW_DIR.'/classes/templates/admin/doctype.php');
 		}elseif(p2v('action')=='clear_cache'){
 			$_cache_obj=&gmo('_cache');
 			$_cache_obj->clearAll();
@@ -34,7 +34,7 @@ class Admin{
 			$model__models=&gmo('_models');
 			$report=$model__models->synchro();
 			//подключаем внешний вид для отчета
-			include(LIB_DIR.'/fw/classes/templates/admin/synchro_report.php');
+			include(FW_DIR.'/classes/templates/admin/synchro_report.php');
 		}elseif(p2v('action')=='extra'){
 			//удаляем лишние таблицы или лишние столбцы в таблицах
 			$this->_removeColsOrTables();
@@ -86,10 +86,10 @@ class Admin{
 			$this->domains_list=$this->getDomainsListHTML();
 			$this->models_list=$this->getModelsListHTML();
 			//собираем страницу: определяем содержимое $this->body
-			include(LIB_DIR.'/fw/classes/templates/admin/3zones.php');
+			include(FW_DIR.'/classes/templates/admin/3zones.php');
 			$this->body=$result;
 			//определяем весь документ
-			include(LIB_DIR.'/fw/classes/templates/admin/doctype.php');
+			include(FW_DIR.'/classes/templates/admin/doctype.php');
 			//в случаях отладки ДБ будем выводить консоль
 			if(DEBUG===true && DEBUG_DB===true){
 				$GLOBALS['obj_client']=new ClientSide();
@@ -114,7 +114,7 @@ class Admin{
 				$domains[]=$item['url'];
 			}
 			//вызываем шаблон вывода списка моделей
-			include(LIB_DIR.'/fw/classes/templates/admin/domains_list.php');
+			include(FW_DIR.'/classes/templates/admin/domains_list.php');
 		}
 
 		if(isset($result)){
@@ -129,22 +129,23 @@ class Admin{
 		//то модель попадает в $final_models_list
 		$final_models_list=$this->_getUserCanSeeModelsArr();
 		//вызываем шаблон вывода списка моделей
-		include(LIB_DIR.'/fw/classes/templates/admin/models_list.php');
+		include(FW_DIR.'/classes/templates/admin/models_list.php');
 		return $result;
 	}
 
+	/**
+	 * создает объект модели $model_name
+	 * эта функция не должна вызываться напрямую, 
+	 * для создания объекта нужно использовать getModelObject() или gmo()
+	 */
 	function &createModelObj($model_name){//создает объект модели с именем $model_name
-		/*
-			эта функция не должна вызываться напрямую, для создания объекта нужно использовать getModelObject()
-		*/
 		//инлюдим код с описанием класса если описание модели еще не доступно
-		if(!class_exists($model_name)){
-			
-			$scriptLocation=SITE_DIR.'/admin/models/'.$model_name.'/_models.php';
-			if(!array_key_exists($model_name,$GLOBALS['INSTALLED_APPS'])){
-				_die('Model '.$model_name.' is not in /admin/models/_settings.php');
-			}elseif(!file_exists($scriptLocation)){
-				_die('Cant load /admin/models/'.$model_name.'/_models.php');
+		if( !class_exists($model_name) ){
+			$scriptLocation=sprintf('%s/%s/_models.php', MODELS_DIR, $model_name);
+			if( !array_key_exists($model_name,$GLOBALS['INSTALLED_APPS']) ){
+				_die('Model is not in MODELS_DIR/_settings.php',$model_name);
+			}elseif( !file_exists($scriptLocation) ){
+				_die('Cant load',$scriptLocation);
 			}else{
 				include($scriptLocation);
 			}

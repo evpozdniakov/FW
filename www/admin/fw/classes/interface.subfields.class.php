@@ -21,7 +21,7 @@ class SubfieldsInterface extends Field {
 			$inputValue[$key]=$params_arr[$this->db_column.'_'.$key];
 		}
 		//подключаем файл с шаблоном
-		include(LIB_DIR.'/fw/classes/templates/field/'.$this->__name__.'.php');//return 'поле формы со значением <pre>'.e5c($data).'</pre><br>';
+		include(FW_DIR.'/classes/templates/field/'.$this->__name__.'.php');//return 'поле формы со значением <pre>'.e5c($data).'</pre><br>';
 
 		return $result;
 	}
