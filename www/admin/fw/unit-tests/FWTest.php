@@ -1,8 +1,5 @@
 <?php
 
-set_include_path('/usr/lib/php');
-echo ini_get('include_path');
-// require_once('PHPUnit/Framework.php');
 if( !empty($_SERVER['DOCUMENT_ROOT']) ){
 	define('SITE_DIR', $_SERVER['DOCUMENT_ROOT']);
 }else{
@@ -13,24 +10,17 @@ require_once(FW_DIR.'/classes/fw.class.php');
 include(SITE_DIR.'/../config.php');
 include(FW_DIR.'/functions.php');
 
-
-class FWTest extends PHPUnit_Framework_TestCase{
-/*
-	public function testDebugInit(){
-		// $this->fixture->debugInit();
-		// $this->assertEquals(true, is_bool(constant($debug_option)));
-		// $this->assertEquals(true, is_bool(constant($debug_option)));
-		$stack = array();
-		$this->assertEquals(0, count($stack));
-
-		array_push($stack, 'foo');
-		$this->assertEquals('foo', $stack[count($stack)-1]);
-		$this->assertEquals(1, count($stack));
-
-		$this->assertEquals('foo', array_pop($stack));
-		$this->assertEquals(0, count($stack));
+class FWTest extends PHPUnit_Framework_TestCase {
+	protected $fw;
+	
+	protected function setUp(){
+		$this->fw=new FW();
 	}
-*/
+	
+	protected function tearDown(){
+		$this->fw=NULL;
+	}
+
 	public function testDebugInitSetOptions(){
 		$fw=new FW();
 		$fw::debugInitSetOptions();

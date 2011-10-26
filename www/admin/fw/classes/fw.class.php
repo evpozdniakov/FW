@@ -7,8 +7,8 @@ class FW{
 		define('MODELS_DIR', SITE_DIR.'/admin/models');
 		
 		// инклюдим конфиг и вспомогательные функции
-		include(SITE_DIR.'/../config.php');
-		include(FW_DIR.'/functions.php');
+		include_once(SITE_DIR.'/../config.php');
+		include_once(FW_DIR.'/functions.php');
 		
 		// опции отладки
 		self::debugInit();
@@ -186,7 +186,7 @@ class FW{
 	 * из utf-8 в SITE_ENCODING
 	 */
 	public static function ajaxSets(){
-		if($_SERVER['HTTP_X_REQUESTED_WITH']=='XMLHttpRequest'){
+		if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH']=='XMLHttpRequest'){
 			define('IS_AJAX',true);
 		}elseif(p2v('json')==1 && DEBUG===true){
 			define('IS_AJAX',true);
@@ -231,7 +231,6 @@ class FW{
 	}
 
 	public static function createGlobals(){
-
 		if(!defined('SERVER_NAME')){
 			if(!defined('SERVER_NAME')){
 				define('SERVER_NAME',$_SERVER['SERVER_NAME']);
