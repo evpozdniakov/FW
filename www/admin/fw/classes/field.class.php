@@ -903,7 +903,7 @@ class BooleanField extends Field{
 				откуда взяты данные для текущего элемента: отправлены ли они REQUEST-ом, или же созданы программно
 				если данные переданы REQUEST-ом, то в случае, если данное поле имеет атрибут editable==true, 
 				то мы возвращаем 'no', если же атрибут editable==false и при этом id>0 (происходит создание элемента), 
-				то возвращаем значение по умолчанию, иначе (editable==false && id=0) ничего не возвращаем, чтобы в методе
+				то возвращаем значение по умолчанию, иначе (editable==false && id=0) возвращаем пустую строку, чтобы в методе
 				getModelItemInitValueCommon() было бы использовано предыдущее значение
 				если же данные не были переданы REQUEST-ом, то возвращаем значение по-умолчаню
 			*/
@@ -920,6 +920,8 @@ class BooleanField extends Field{
 					$result='no';
 				}elseif((int)$model_item_init_values['id']==0){
 					$result=$this->default;
+				}else{
+					$result='';
 				}
 			}else{
 				$result=$this->default;

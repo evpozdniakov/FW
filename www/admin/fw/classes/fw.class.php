@@ -2,14 +2,12 @@
 
 class FW{
 	public static function init(){
-		define('SITE_DIR', $_SERVER['DOCUMENT_ROOT']);
-		define('FW_DIR', SITE_DIR.'/admin/fw');
-		define('MODELS_DIR', SITE_DIR.'/admin/models');
-		
-		// инклюдим конфиг и вспомогательные функции
-		include_once(SITE_DIR.'/../config.php');
-		include_once(FW_DIR.'/functions.php');
-		
+		// устанавливаем константы *_DIR
+		self::setDIRs();
+
+		// инклюдим конфиг и основные функции
+		self::includeSitecfgAndBasefunc();
+
 		// опции отладки
 		self::debugInit();
 		
@@ -29,11 +27,38 @@ class FW{
 		// подключаемся к БД
 		self::connectDB();
 		
-		//создаем $GLOBALS['path']
-		self::createGlobals();
+		// устанавливаем SERVER_NAME
+		self::setServerName();
 		
-		//определяем языковую версию
+		// удаляем get-параметры из $_SERVER['REQUEST_URI']
+		self::fixServerRequestUri();
+		
+		// создаем $GLOBALS['path_requested']
+		self::setGlobalsPathRequested();
+
+		// создаем $_SERVER['REDIRECT_URL']
+		self::fixServerRedirectUrl();
+
+		// создаем $GLOBALS['path']
+		self::setGlobalsPath();
+		
+		// определяем принт-версию
+		self::setPrintVersion();
+		
+		// определяем DOMAIN
 		self::setDomain();
+		
+		// при необходимости делаем редирект на домен по-умолчанию
+		self::defaultDomainRedirect();
+		
+		// определяем DOMAIN_ID
+		self::setDomainId();
+		
+		// определяем DOMAIN_PATH
+		self::setDomainPath();
+		
+		// устанавливаем IS_FIRST
+		self::setIsFirst();
 		
 		//стартуем сессии
 		self::startSessions();
@@ -47,6 +72,30 @@ class FW{
 		//запускаемся
 		self::run();
 	}
+	
+	/**
+	 * устанавливает пути к корню сайта, файлам FW и моделям
+	 * в константы SITE_DIR, FW_DIR, MODELS_DIR
+	 */
+	public static function setDIRs(){
+		if( !defined('SITE_DIR') ){
+			define('SITE_DIR', $_SERVER['DOCUMENT_ROOT']);
+		}
+		if( !defined('FW_DIR') ){
+			define('FW_DIR', SITE_DIR.'/admin/fw');
+		}
+		if( !defined('MODELS_DIR') ){
+			define('MODELS_DIR', SITE_DIR.'/admin/models');
+		}
+	}
+	
+	/**
+	 * подключает конфиг config.php и вспомогательные функции functions.php
+	 */
+	public static function includeSitecfgAndBasefunc(){
+		include_once(SITE_DIR.'/../config.php');
+		include_once(FW_DIR.'/functions.php');
+	}
 
 	/**
 	 * устанавливает константу DEBUG=false, если она не была задана ранее
@@ -59,8 +108,14 @@ class FW{
 			define('DEBUG', false);
 		}
 
-		// устанавливаем константы DEBUG_*
-		self::debugInitSetOptions();
+		// устанавливаем значения для констант DEBUG_*
+		// делаем эту функцию немного сложнее, чтобы можно было ее протестировать
+		$debug_option_values=self::getDebugOptionValues(DEBUG_OPTIONS);
+		foreach($debug_option_values as $option_name=>$bool){
+			if( !defined($option_name) ){
+				define($option_name, $bool);
+			}
+		}
 		
 		// подкючаем класс для отладки запросов к БД
 		if(DEBUG_DB===true){
@@ -75,25 +130,24 @@ class FW{
 	 * на входе строка с опциями, которые должны быть установлены в true
 	 * остальные должны быть установлены в false
 	 */
-	public static function debugInitSetOptions(){
-		$user_debug_options=_explode(DEBUG_OPTIONS);
+	public static function getDebugOptionValues($debug_options){
+		$result=array();
+		// используем _explode() для разбиения $debug_options
+		// давая возможность записать эту константу в конфиге на свое усмотрение
+		$user_debug_options=_explode($debug_options);
 
 		$all_debug_options='DB DB_SAVE_STACK DB_INCLUDE_RES EMAIL_ERROR SMARTY_CONSOLE_ON TRACE_ON_DIE DISPLAY_PHP_ERRORS';
 		$all_debug_options=explode(' ',$all_debug_options);
 
-		foreach($all_debug_options as $option_name){
-			if( !defined('DEBUG_'.$option_name) ){
-				/*
-					TODO добавить allowed debug start
-				*/
-				if( in_array($option_name,$user_debug_options) ){
-					$option_value=true;
-				}else{
-					$option_value=false;
-				}
-				define('DEBUG_'.$option_name, $option_value);
+		foreach($all_debug_options as $option){
+			if( in_array($option,$user_debug_options) ){
+				$bool=true;
+			}else{
+				$bool=false;
 			}
+			$result['DEBUG_'.$option]=$bool;
 		}
+		return $result;
 	}
 
 	/**
@@ -220,152 +274,291 @@ class FW{
 	 * если же параметры подключения не заданы, то USE_DB=false
 	 */
 	public static function connectDB(){
+		$use_db=false;
 		if( defined('DBUSER') && defined('DBNAME') ){
-			define('USE_DB', true);
-			include(FW_DIR.'/classes/db.class.php');
+			$use_db=true;
+			include_once(FW_DIR.'/classes/db.class.php');
 			$db=new DB();
 			$db::connect();
-		}else{
-			define('USE_DB', false);
 		}
+		define('USE_DB', $use_db);
 	}
-
-	public static function createGlobals(){
-		if(!defined('SERVER_NAME')){
-			if(!defined('SERVER_NAME')){
-				define('SERVER_NAME',$_SERVER['SERVER_NAME']);
+	
+	/**
+	 * устанавливает SERVER_NAME на основе переменных окружения
+	 * $_SERVER['SERVER_NAME'] и $_SERVER['HTTP_HOST']
+	 * если они не идентичны, выдается сообщение об ошибке
+	 */
+	public static function setServerName(){
+		// возможно константу уже определили в config.php
+		if( !defined('SERVER_NAME') ){
+			$server_name=$_SERVER['SERVER_NAME'];
+			// $_SERVER['HTTP_HOST'] может содержать двоеточие и номер порта (msk.meetafora.ru:80)
+			$http_host=$_SERVER['HTTP_HOST'];
+			if( $pos=mb_strpos($http_host,':')>0 ){
+				$http_host=mb_substr($http_host,0,$pos);
 			}
-			// данный алгоритм не сработал на TEL
-			// поскольку $_SERVER['SERVER_NAME']==www2.tel.ru а $_SERVER['HTTP_HOST']==corp.tel.ru
-			// if(mb_strlen($_SERVER['HTTP_HOST']) > mb_strlen($_SERVER['SERVER_NAME'])){
-			// 	define('SERVER_NAME',$_SERVER['HTTP_HOST']);
-			// }else{
-			// 	define('SERVER_NAME',$_SERVER['SERVER_NAME']);
-			// }
-		}
-		/*
-		чтобы при использовании кэширования невозможно было вызывать 
-		повторную генерацию страниц с помощью get-параметров нужно
-		1. для страниц, которые подлежат кэшированию, запретить запрашивать урлы с get-параметрами
-		2. при создании кэшированной страницы использовать именно запрашиваемый адрес $_SERVER['REQUEST_URI']
-		*/
-		//проверяем, имеются ли в $_SERVER['REQUEST_URI'] вопросительные знаки
-		//_log('$_SERVER[REQUEST_URI]='.$_SERVER['REQUEST_URI']);
-		if(mb_strpos($_SERVER['REQUEST_URI'],'?')!==false){
-			//на всякий случай запоминаем оригинальный $_SERVER['REQUEST_URI']
-			//наличие этой переменной будет означать присутствие get-параметра в запрашиваемой странице
-			//и запрет кэширования
-			$_SERVER['REQUEST_URI_BAK']=$_SERVER['REQUEST_URI'];
-			//переопределяем $_SERVER['REQUEST_URI'], убирая из него get-параметры
-			$_SERVER['REQUEST_URI']=mb_substr($_SERVER['REQUEST_URI'],0,mb_strpos($_SERVER['REQUEST_URI'],'?'));
-		}
-		//в массив $GLOBALS['path'] нам нужно поместить запрашиваемый домен и тот адрес, 
-		//который получился в результате преобразований мод-реврайта $_SERVER['REDIRECT_URL']
-		$host_and_redirect=SERVER_NAME;
-		$_SERVER['REDIRECT_URL']='/'.strip_tags($_GET['__uri__']);//_print_r('redirect='.$_SERVER['REDIRECT_URL']);
-		$host_and_redirect.=$_SERVER['REDIRECT_URL'];//_print_r('$host_and_redirect='.$host_and_redirect);
-		//убираем заключительный слэш, чтобы не получился последний пустой элемент массива
-		if(mb_substr($host_and_redirect,-1)=='/'){$host_and_redirect=mb_substr($host_and_redirect,0,-1);}
-		//разбиваем $host_and_redirect по слэшам в глобальный массив $GLOBALS['path']
-		$GLOBALS['path']=explode('/',$host_and_redirect);
-		//в массив $GLOBALS['vpath'] нам нужно поместить запрашиваемый домен и запрашиваемый путь
-		$host_and_request=SERVER_NAME;
-		$host_and_request.=$_SERVER['REQUEST_URI'];
-		//убираем заключительный слэш, чтобы не получился последний пустой элемент массива
-		if(mb_substr($host_and_request,-1)=='/'){$host_and_request=mb_substr($host_and_request,0,-1);}
-		//разбиваем $host_and_request по слэшам в глобальный массив $GLOBALS['vpath']
-		$GLOBALS['vpath']=explode('/',$host_and_request);
-		//определяем принт-версию
-		$version=($_GET['verprint'])?'print':'';
-		define('VERSION',$version);
-	}
-
-	public static function setDomain(){
-		if(USE_DB===true){
-			//определяем субдомен
-			if(USE_SUBDOMAINS===true){
-				if(!defined('SUBDOMAINS_LIST') || !defined('DEFAULT_SUBDOMAIN') || !defined('HIDE_DEFAULT_SUBDOMAIN')){
-					/*
-						TODO проверить этот _die
-					*/
-					_die('настройте правильно config.php для работы с субдоменами. Должны быть заданы следующие константы:','USE_SUBDOMAINS','SUBDOMAINS_LIST (список субдоменов через запятую)','DEFAULT_SUBDOMAIN','HIDE_DEFAULT_SUBDOMAIN');
-				}
-				//определяем субдомен из имени сервера
-				$subdomains=explode('.',SERVER_NAME);
-				$subdomains_list=_explode(SUBDOMAINS_LIST);
-				if(in_array($subdomains[0], $subdomains_list)){
-					// известно, что запрошенный субдомен относится к списку возможных, запоминаем его
-					$found_substr=$subdomains[0];
-					// если запрошен дефолтный субдомен и если нужно его скрывать, то делаем редирект
-					if($found_substr==DEFAULT_SUBDOMAIN && HIDE_DEFAULT_SUBDOMAIN===true){
-						hexit('Location: http://'.removeSubdomain());
-					}
-				}else{
-					// запрашивается сайт без субдомена или с www впереди
-					// это означает, что запрашивается дефолтный субдомен
-					$found_substr=DEFAULT_SUBDOMAIN;
-					// делаем редирект на дефолтный субдомен, если нужно
-					if(HIDE_DEFAULT_SUBDOMAIN===false){
-						hexit('Location: http://'.DEFAULT_SUBDOMAIN.'.'.SERVER_NAME);
-					}
-				}
-			}elseif(USE_MULTIDOMAINS===true){
-				$found_substr=SERVER_NAME;
+			// считаем что мы нашли SERVER_NAME если $server_name и $http_host идентичны
+			// иначе просим пользователя задать SERVER_NAME в конфиге
+			if( $server_name==$http_host ){
+				define('SERVER_NAME', $server_name);
 			}else{
-				//если субдомены не используются, то вытаскиваем субдомен из $_GET['__domain__']
-				if(!empty($_GET['__domain__'])){
-					$found_substr=$_GET['__domain__'];
-				}else{
-					//если $_GET['__domain__'] не задан, то присваиваем знак процента, 
-					//чтобы вытащить первый попавшийся субдомен из БД 
-					$found_substr='%';
-				}
+				_die(sprintf('Не удалось корректно определить SERVER_NAME по "%s" и "%s". Пожалуйста задайте константу вручную в config.php', $_SERVER['SERVER_NAME'], $_SERVER['HTTP_HOST']));
 			}
-
-			if(empty($found_substr)){
-				_die('субдомен не был определен');
-			}
-
-			$subdomain_exists_in_DB=false;
-			if(DEBUG===true){
-				$dbq=new DBQ('show tables like "structure"');
-				if($dbq->rows==0){_die('таблица "structure" отсутствует в БД');}
-			}
-			$dbq=new DBQ('select id, url from structure where parent=0 and url like ? order by ordering limit 1',$found_substr);
-			if($dbq->rows==1){
-				$subdomain_exists_in_DB=true;
-				define('DOMAIN_ID',$dbq->line['id']);
-				define('DOMAIN',$dbq->line['url']);
-				//определяем префикс, например "/en"
-				//если p2v('__domain__') не определен, значит язык не был передан, 
-				//и значит префикс не определяется (равен пустоте)
-				$prefix=empty($_GET['__domain__'])?'':'/~'.$dbq->line['url'].'~';
-				define('DOMAIN_PATH',$prefix);
-			}//_echo('DOMAIN is '.DOMAIN);_echo('DOMAIN_PATH is '.DOMAIN_PATH);
-			if( !$subdomain_exists_in_DB ){
-				setCookie('region_custom', '', time()- 3600, '/', removeSubdomain());
-				hexit('Location: http://'.removeSubdomain());
-				_die('данные для субдомена "'.$found_substr.'" отсутствуют в таблице structure');
-			}
-			//определяем главную страницу
-			define('IS_FIRST',(bool)($_SERVER['REQUEST_URI']==DOMAIN_PATH.'/'));//_log('IS_FIRST set to '.chb(IS_FIRST));
-			define('IS_FIRST_AFTER_REDIR',(bool)(count($GLOBALS['path'])==1));
 		}
 	}
 
 	/**
-	 * Выводим закешированую страницу для $_SERVER['REQUEST_URI'] и выполняем exit
-	 * При отсутствии закешированой страницы - ничего не делаем
-	 * Если страница устарела - чистим кеш (и файл и записи в таблицах _cache и _cache__models_rel)
-	 * 
-	 * Время жизни пишется первой строкой в файле кеша
-	 *
+	 * при использовании кэширования злоумышленники могут забить кэш, делая
+	 * запросы к одной и той же странице с разными get-парамтрами
+	 * чтобы этого избежать, нужно удалить get-параметры из $_SERVER['REQUEST_URI']
+	 * и запомнить его предыдущее значение
 	 */
-	public static function tryUseCache(){
-		//инклюдим кэш только если он используется
-		if(USE_CACHE===true){
-			try2useCache();
+	public static function fixServerRequestUri(){
+		// очищаем $_SERVER['REQUEST_URI'] от тегов, которые могли
+		// добавить злоумышленники (например <script>...</script>)
+		$_SERVER['REQUEST_URI']=strip_tags($_SERVER['REQUEST_URI']);
+		// отбрасываем get-параметры
+		if( $pos=mb_strpos($_SERVER['REQUEST_URI'],'?') ){
+			$_SERVER['REQUEST_URI_ORIGINAL']=$_SERVER['REQUEST_URI'];
+			$_SERVER['REQUEST_URI']=mb_substr($_SERVER['REQUEST_URI'],0,$pos);
 		}
+	}
+
+	/**
+	 * метод берет путь запрашиваемый путь ($_SERVER['REQUEST_URI'])
+	 * разбивает его по слэшам и помещает в массив $GLOBALS['path_requested']
+	 * (причем в нулевом элементе массива содержится SERVER_NAME)
+	 */
+	public static function setGlobalsPathRequested(){
+		$server_name__request_uri=SERVER_NAME.$_SERVER['REQUEST_URI'];
+		// избавляемся от слэша на конце, чтобы избежать пустого элемента в массиве
+		if( mb_substr($server_name__request_uri, -1)=='/' ){
+			$server_name__request_uri=mb_substr($server_name__request_uri,0,-1);
+		}
+		// получаем массив
+		$GLOBALS['path_requested']=explode('/', $server_name__request_uri);
+	}
+	
+	/**
+	 * на основе $_GET['__uri__'] создаем $_SERVER['REDIRECT_URL'],
+	 * который является результатом перенаправлений RewriteRule и пр.
+	 * в большинстве случае $_SERVER['REDIRECT_URL'] 
+	 * будет совпадать с $_SERVER['REQUEST_URI']
+	 */
+	public static function fixServerRedirectUrl(){
+		// очищаем $_GET['__uri__'] от тегов, которые могли
+		// добавить злоумышленники (например <script>...</script>)
+		$_GET['__uri__']=strip_tags($_GET['__uri__']);
+		// добавляем лидирующий слэш
+		$_SERVER['REDIRECT_URL']='/'.$_GET['__uri__'];
+	}
+	
+	/**
+	 * метод берет путь, получаемый после редиректов (RewriteRule и пр.)
+	 * (как раз этот путь содержится в $_SERVER['REDIRECT_URL'])
+	 * разбивает его по слэшам и помещает в массив $GLOBALS['path']
+	 * (причем в нулевом элементе массива содержится SERVER_NAME)
+	 */
+	public static function setGlobalsPath(){
+		$server_name__redirect_url=SERVER_NAME.$_SERVER['REDIRECT_URL'];
+		// избавляемся от слэша на конце, чтобы избежать пустого элемента в массиве
+		if( mb_substr($server_name__redirect_url, -1)=='/' ){
+			$server_name__redirect_url=mb_substr($server_name__redirect_url,0,-1);
+		}
+		// получаем массив
+		$GLOBALS['path']=explode('/', $server_name__redirect_url);
+	}
+
+	/**
+	 * определяем принт-версию на основе $_GET['verprint']
+	 * (согласно правилу редиректа в корневом .htaccess 
+	 * для перехода в режим принт-версии достаточно к адресу
+	 * любой страницы добавить "?print", например:
+	 * http://www.mysite.com/my/page/ — адрес страницы
+	 * http://www.mysite.com/my/page/?print — адрес ее принт-версии)
+	 */
+	public static function setPrintVersion(){
+		$bool=(bool)($_GET['__print_version__']==1);
+		define('PRINT_VERSION',$bool);
+	}
+	
+	/**
+	 * устанавливает DOMAIN на основе запрашиваемого URL и config.php
+	 * 
+	 * в случае USE_MULTIDOMAINS===false, установка DOMAIN откладывается
+	 * поскольку для этого понадобится сделать лишний запрос к БД
+	 */
+	public static function setDomain(){
+		$domain=self::getDomainValue(USE_DB, USE_MULTIDOMAINS, SERVER_NAME, USE_SUBDOMAINS, DOMAINS_LIST, DEFAULT_DOMAIN, HIDE_DEFAULT_DOMAIN, $_GET['__domain__']);
+		if( !defined('DOMAIN') && !empty($domain) ){
+			define('DOMAIN',$domain);
+		}
+	}
+	
+	/**
+	 * определяем домен, с учетом которого будут делаться запросы к БД
+	 * данный метод сделан немного сложнее, чтобы его можно было тестировать
+	 */
+	public static function getDomainValue($use_db, $use_multidomains, $server_name, $use_subdomains, $domains_list, $default_domain, $hide_default_domain, $__domain__){
+		$domain='';
+		if( $use_db===true && $use_multidomains===true ){
+			if( $use_subdomains===true ){
+				// определяем домен из имени сервера
+				$server_name_arr=explode('.',$server_name);
+				// применяем _explode() чтобы дать возможность пользователю
+				// указать любой разделитель для DOMAINS_LIST
+				$domains_list_arr=_explode($domains_list);
+				if( in_array($server_name_arr[0], $domains_list_arr) ){
+					// известно, что запрошенный субдомен относится к списку возможных, запоминаем его
+					$domain=$server_name_arr[0];
+				}elseif( $hide_default_domain===true ){
+					// запрашивается дефолтный субдомен
+					$domain=$default_domain;
+				}else{
+					// возникла ошибка: домен не может быть определен корректно
+					_die(sprintf('домен не может быть определен корректно, поскольку субдомен "%s" не входит в список возможных:', $server_name_arr[0]), $domains_list);
+				}
+			}else{
+				if( !empty($__domain__) ){
+					$domain=$__domain__;
+				}elseif( $hide_default_domain===true ){
+					$domain=$default_domain;
+				}else{
+					// возникла ошибка: домен не может быть определен корректно
+					_die(sprintf('домен не может быть определен корректно, поскольку $_GET[__domain__]="%s" не входит в список возможных:', $__domain__), $domains_list);
+				}
+			}
+		}
+		
+		return $domain;
+	}
+
+	/**
+	 * если запрашивается домен по-умолчанию и если URL конфликтует с настройкой HIDE_DEFAULT_DOMAIN
+	 * то делаем редирект на нужный доменный адрес, сохраняя запрашиваемый путь
+	 * 
+	 */
+	public static function defaultDomainRedirect(){
+		$redirection=self::getDefaultDomainRedirection(USE_DB, USE_MULTIDOMAINS, DOMAIN, SERVER_NAME, $_SERVER['REQUEST_URI'], USE_SUBDOMAINS, DEFAULT_DOMAIN, HIDE_DEFAULT_DOMAIN);
+		if( !empty($redirection) ){
+			hexit('Location: '.$redirection);
+		}
+	}
+	
+	/**
+	 * метод определяет, нужно ли делать редирект на другую страницу
+	 * редирект нужно делать в случае, если текущий домен является доменом по-умолчанию
+	 * и если он конфликтует с настройкой HIDE_DEFAULT_DOMAIN
+	 * т.е. редирект производится 
+	 * 1. если HIDE_DEFAULT_DOMAIN==true и домен присутствует в адресе
+	 * 2. если HIDE_DEFAULT_DOMAIN==false и домен отсутствует в адресе
+	 * 
+	 */
+	public static function getDefaultDomainRedirection($use_db, $use_multidomains, $current_domain, $server_name, $URL, $use_subdomains, $default_domain, $hide_default_domain){
+		$redirection='';
+		if( $use_db===true && $use_multidomains===true ){
+			if( $current_domain==$default_domain ){
+				if( $use_subdomains===true ){
+					$server_name_arr=explode('.',$server_name);
+					if( $server_name_arr[0]==$current_domain && $hide_default_domain===true ){
+						$server_name_arr=array_slice($server_name_arr, 1);
+						$redirection=sprintf('%s%s', implode('.',$server_name_arr), $URL);
+					}elseif( $server_name_arr[0]!=$current_domain && $hide_default_domain===false ){
+						$redirection=sprintf('%s.%s%s', $current_domain, $server_name, $URL);
+					}
+				}else{
+					$url_arr=explode('/', $URL);
+					if( $url_arr[1]=='~'.$current_domain.'~' && $hide_default_domain===true ){
+						$url_arr=array_slice($url_arr,2);
+						$redirection=sprintf('%s/%s', $server_name, implode('/',$url_arr));
+					}elseif( $url_arr[1]!='~'.$current_domain.'~' && $hide_default_domain===false ){
+						$redirection=sprintf('%s/~%s~%s', $server_name, $current_domain, $URL);
+					}
+				}
+			}
+		}
+		
+		return $redirection;
+	}
+
+	/**
+	 * метод устанавливает DOMAIN_ID (и DOMAIN если он не был установлен ранее)
+	 * если USE_MULTIDOMAINS===true нужно вытащить из БД корневой раздел соответствующего домен
+	 * иначе просто корневой раздел
+	 */
+	public static function setDomainId(){
+		list($domain, $domain_id)=self::getDomainIdValue(USE_DB, USE_MULTIDOMAINS, DOMAIN);
+		define('DOMAIN_ID', $domain_id);
+		if( !defined('DOMAIN') ){
+			define('DOMAIN', $domain);
+		}
+	}
+	
+	public static function getDomainIdValue($use_db, $use_multidomains, $domain){
+		$domain_id=0;
+		$domain='';
+		if( $use_db===true ){
+			if( $use_multidomains===false ){
+				$dbq=new DBQ('select id, url from structure where parent=0 and url like "%"');
+			}else{
+				$dbq=new DBQ('select id, url from structure where parent=0 and url like ?', $domain);
+			}
+			if( $dbq->rows==0 ){
+				_die('данные для домена "'.$domain.'" отсутствуют в таблице structure');
+			}elseif( $dbq->rows > 1 ){
+				_die('в таблице structure есть лишние данные для домена "'.$domain.'"');
+			}else{
+				$domain=$dbq->line['url'];
+				$domain_id=$dbq->line['id'];
+			}
+		}
+		
+		return array($domain, $domain_id);
+	}
+	
+	/**
+	 * метод устанавливает DOMAIN_PATH в случае когда USE_SUBDOMAINS==false
+	 */
+	public static function setDomainPath(){
+		$domain_path=self::getDomainPathValue(USE_MULTIDOMAINS, USE_SUBDOMAINS, DOMAIN);
+		define('DOMAIN_PATH', $domain_path);
+	}
+	
+	public static function getDomainPathValue($use_multidomains, $use_subdomains, $domain){
+		$domain_path='';
+		if( $use_multidomains===true && $use_subdomains===false ){
+			$domain_path=sprintf('/~%s~',$domain);
+		}
+		return $domain_path;
+	}
+
+	public static function setIsFirst(){
+		$bool=self::getIsFirstValue(USE_MULTIDOMAINS, USE_SUBDOMAINS, HIDE_DEFAULT_DOMAIN, DOMAIN_PATH, $GLOBALS['path_requested']);
+		define('IS_FIRST', $bool);
+	}
+	
+	/**
+	 * метод определяет, запрашивается ли главная страница
+	 * в простом случае достаточно взглянуть на $GLOBALS['path_requested']
+	 * если он содержит всего 1 элемент, то значит запрашивается главная страница
+	 * но возможен также вариант, когда используются мультидомены без субдоменов
+	 * тогда главная страница может выглядеть как-то так /~msk~/
+	 * 
+	 */
+	public static function getIsFirstValue($use_multidomains, $use_subdomains, $hide_default_domain, $domain_path, $globals_path_requested){
+		$bool=false;
+		if( $use_multidomains===true && $use_subdomains===false ){
+			if( $hide_default_domain===true && count($globals_path_requested)==1 ){
+				$bool=true;
+			}elseif($hide_default_domain===false && count($globals_path_requested)==2 && $domain_path=='/'.$globals_path_requested[1]){
+				$bool=true;
+			}
+		}elseif( count($globals_path_requested)==1 ){
+			$bool=true;
+		}
+		
+		return $bool;
 	}
 
 	public static function startSessions(){
@@ -387,28 +580,43 @@ class FW{
 		session_start();
 	}
 
+	/**
+	 * Выводим закешированую страницу для $_SERVER['REQUEST_URI'] и выполняем exit
+	 * При отсутствии закешированой страницы - ничего не делаем
+	 * Если страница устарела - чистим кеш (и файл и записи в таблицах _cache и _cache__models_rel)
+	 * 
+	 * Время жизни пишется первой строкой в файле кеша
+	 *
+	 */
+	public static function tryUseCache(){
+		//инклюдим кэш только если он используется
+		if(USE_CACHE===true){
+			try2useCache();
+		}
+	}
+
 	public static function includeClasses(){
-		include(FW_DIR.'/classes/compressor.class.php');
+		include_once(FW_DIR.'/classes/compressor.class.php');
 		if(USE_DB===true){
-			include(FW_DIR.'/classes/admin.class.php');
-			include(FW_DIR.'/classes/model.class.php');
-			include(FW_DIR.'/classes/modelmanager.class.php');
-			include(FW_DIR.'/classes/field.class.php');
-			include(FW_DIR.'/classes/formitems.class.php');
+			include_once(FW_DIR.'/classes/admin.class.php');
+			include_once(FW_DIR.'/classes/model.class.php');
+			include_once(FW_DIR.'/classes/modelmanager.class.php');
+			include_once(FW_DIR.'/classes/field.class.php');
+			include_once(FW_DIR.'/classes/formitems.class.php');
 			//model.cache.class.php и model.models.class.php нам нужно загружать в любом случае, 
 			//поскольку функция кэширования может быть включена и выключена в любой момент, 
 			//и при этом администратор может работать с контентом,
 			//и закэшированные страницы должны своевременно удалятся 
 			//ну а модель _Models необходима для корректной работы _Cache
-			include(FW_DIR.'/classes/model.cache.class.php'); 
-			include(FW_DIR.'/classes/model.models.class.php');
+			include_once(FW_DIR.'/classes/model.cache.class.php'); 
+			include_once(FW_DIR.'/classes/model.models.class.php');
 			if(false
 				|| !isset($GLOBALS['path'][1])
 				|| $GLOBALS['path'][1]!='admin' //для клиентской части
 				|| (DEBUG===true && DEBUG_DB===true) //для админки, если включена отладка ДБ
 			){
-				include(SMARTY_LIBS.'/Smarty.class.php');
-				include(FW_DIR.'/classes/clientside.class.php');
+				include_once(SMARTY_LIBS.'/Smarty.class.php');
+				include_once(FW_DIR.'/classes/clientside.class.php');
 			}
 		}
 	}
@@ -438,18 +646,18 @@ class FW{
 			//если файл в админ-зоне, то это может быть только php-файл, и у пользователя должна быть сессия
 			if($GLOBALS['path'][1]=='admin' && mb_substr($script_location,-4)=='.php'){
 				if( isset($_SESSION['admin_user']) ){
-					include(SITE_DIR.$script_location);
+					include_once(SITE_DIR.$script_location);
 					// после того как файл был запущен, прекращаем работу
 					exit();
 				}
 			}else{
 				// если FW не используется, то просто подключаем smarty
 				if( USE_DB===false ){
-					include(SMARTY_LIBS.'/Smarty.class.php');
-					include(FW_DIR.'/classes/clientside.class.php');
+					include_once(SMARTY_LIBS.'/Smarty.class.php');
+					include_once(FW_DIR.'/classes/clientside.class.php');
 					$GLOBALS['obj_client']=new ClientSide();
 				}
-				include(SITE_DIR.$script_location);
+				include_once(SITE_DIR.$script_location);
 				//если файл все-таки был запущен, то прекращаем работу
 				exit();
 			}

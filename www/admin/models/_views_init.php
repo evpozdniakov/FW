@@ -23,6 +23,6 @@ if(IS_FIRST===true){
 }else{
 	$GLOBALS['BODY_CLASS'][]='second';
 	$GLOBALS['BODY_CLASS'][]=sprintf('page%d',$GLOBALS['obj_client']->structure_data_reverse[0]['id']);
-	$GLOBALS['BODY_CLASS'][]=$GLOBALS['vpath'][1];
+	$GLOBALS['BODY_CLASS'][]=$GLOBALS['path_requested'][1];
 }
 

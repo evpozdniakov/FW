@@ -67,7 +67,7 @@ RewriteRule ^(.*[^\/])$ 	/$1/ [R,L]
 
 # определяем print-версию
 RewriteCond %{QUERY_STRING} ^print
-RewriteRule ^(.*)$ 	/$1?verprint=1&%{QUERY_STRING} 	[L]
+RewriteRule ^(.*)$ 	/$1?__print_version__=1&%{QUERY_STRING} 	[L]
 
 # определяем языковую версию
 RewriteRule ^~([a-z]+)~/(.*)$ 	/$2?__domain__=$1&%{QUERY_STRING} 	[L]

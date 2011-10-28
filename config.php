@@ -5,22 +5,26 @@
 /* ************ НАСТРОЙКИ САЙТА ************ */
 
 /*субдомены*/
-// будут ли использоваться субдомены 
-// если false, то все остальные опции — SUBDOMAINS_LIST DEFAULT_SUBDOMAIN HIDE_DEFAULT_SUBDOMAIN — не имеют значения
-define('USE_SUBDOMAINS', false);
+// будет ли контент сайта распределятся по доменам
+// если false, то все остальные опции — USE_SUBDOMAINS DOMAINS_LIST DEFAULT_DOMAIN HIDE_DEFAULT_DOMAIN — не имеют значения
+define('USE_MULTIDOMAINS', false);
+// настроен ли сервер на использование субдоменов
+// если нет, то многодоменность будет достигнута с помощью префиксов 
+// в пути к страницам сайта, вида ~domain~, например http://mysite.com/~msk~/
+define('USE_SUBDOMAINS', true);
 // список используемых субдоменов (через пробел)
 // например, если будут использоваться www.site.ru и sale.site.ru
 // то нужно указать 'www sale'
-define('SUBDOMAINS_LIST', 'www sale');
+define('DOMAINS_LIST', 'msk spb');
 // основной субдомен (субдомен по-умолчанию)
 // на него будет происходить редирект если адрес сайта набрали без субдомена
 // site.ru -> www.site.ru
-define('DEFAULT_SUBDOMAIN', 'www');
+define('DEFAULT_DOMAIN', 'msk');
 // следует ли скрывать основной субдомен
 // чтобы избежать редиректа на основной субдомен при запросе сайта без субдомена
 // но в этом случае будет происходить редирект 
 // www.site.ru -> site.ru
-define('HIDE_DEFAULT_SUBDOMAIN', true);
+define('HIDE_DEFAULT_DOMAIN', true);
 
 /*ключ yandex-карт*/
 // используем переменную окружения SERVER_NAME чтобы задать разные ключи к картам
@@ -76,8 +80,13 @@ define('SMARTY_SYNTAX', '{ }');
 
 /* ************ АДМИНКА ************ */
 
-/*тема*/
-define('ADMIN_INTERFACE_THEME', 'default');
+/*вшенший вид*/
+// тема
+// define('ADMIN_INTERFACE_THEME', 'default');
+
+/*тестирование*/
+// путь к PHPUnit
+// define('PHPUNIT_DIR', '/usr/lib/php');
 
 
 
@@ -103,4 +112,4 @@ define('DEBUG', true);
 // EMAIL_ERROR - дублировать на адрес ADMIN_EMAIL записи, поступающие в логи
 // TRACE_ON_DIE - вывести отладку после отработки die()
 // DISPLAY_PHP_ERRORS - вывести ошибки php на экран (в любом случае выводятся в /admin/_php.log)
-define('DEBUG_OPTIONS', 'DISPLAY_PHP_ERRORS TRACE_ON_DIE');
+define('DEBUG_OPTIONS', 'DISPLAY_PHP_ERRORS');

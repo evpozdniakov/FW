@@ -10,7 +10,11 @@ include_once(SITE_DIR.'/../config.php');
 $config['phpunit_html'] = LIB_DIR.'/';
 
 // Path to PHPUnit or null if include path (ie. /usr/local/php/PEAR/PHPUnit/)
-$config['phpunit'] = null;
+if( defined('PHPUNIT_DIR') ){
+	$config['phpunit'] = PHPUNIT_DIR.'/';
+}else{
+	$config['phpunit'] = null;
+}
 
 // Name of template to use
 $config['template'] = 'default';
