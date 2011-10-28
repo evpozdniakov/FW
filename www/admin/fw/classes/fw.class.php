@@ -60,16 +60,19 @@ class FW{
 		// устанавливаем IS_FIRST
 		self::setIsFirst();
 		
-		//стартуем сессии
-		self::startSessions();
+		// стартуем сессию
+		self::startSession();
 		
-		//пытаемся вернуть закэшированную страницу
+		// пытаемся вернуть закэшированную страницу
 		self::tryUseCache();
 		
-		//инклюдим классы
+		// инклюдим классы
 		self::includeClasses();
+
+		// отправляем заголовок с кодировкой
+		self::sendEncodingHeader();
 		
-		//запускаемся
+		// запускаемся
 		self::run();
 	}
 	
@@ -455,7 +458,7 @@ class FW{
 	 * 2. если HIDE_DEFAULT_DOMAIN==false и домен отсутствует в адресе
 	 * 
 	 */
-	public static function getDefaultDomainRedirection($use_db, $use_multidomains, $current_domain, $server_name, $URL, $use_subdomains, $default_domain, $hide_default_domain){
+	public static function getDefaultDomainRedirection($use_db, $use_multidomains, $current_domain, $server_name, $request_uri, $use_subdomains, $default_domain, $hide_default_domain){
 		$redirection='';
 		if( $use_db===true && $use_multidomains===true ){
 			if( $current_domain==$default_domain ){
@@ -463,17 +466,17 @@ class FW{
 					$server_name_arr=explode('.',$server_name);
 					if( $server_name_arr[0]==$current_domain && $hide_default_domain===true ){
 						$server_name_arr=array_slice($server_name_arr, 1);
-						$redirection=sprintf('%s%s', implode('.',$server_name_arr), $URL);
+						$redirection=sprintf('%s%s', implode('.',$server_name_arr), $request_uri);
 					}elseif( $server_name_arr[0]!=$current_domain && $hide_default_domain===false ){
-						$redirection=sprintf('%s.%s%s', $current_domain, $server_name, $URL);
+						$redirection=sprintf('%s.%s%s', $current_domain, $server_name, $request_uri);
 					}
 				}else{
-					$url_arr=explode('/', $URL);
-					if( $url_arr[1]=='~'.$current_domain.'~' && $hide_default_domain===true ){
-						$url_arr=array_slice($url_arr,2);
-						$redirection=sprintf('%s/%s', $server_name, implode('/',$url_arr));
-					}elseif( $url_arr[1]!='~'.$current_domain.'~' && $hide_default_domain===false ){
-						$redirection=sprintf('%s/~%s~%s', $server_name, $current_domain, $URL);
+					$request_uri_arr=explode('/', $request_uri);
+					if( $request_uri_arr[1]=='~'.$current_domain.'~' && $hide_default_domain===true ){
+						$request_uri_arr=array_slice($request_uri_arr,2);
+						$redirection=sprintf('%s/%s', $server_name, implode('/',$request_uri_arr));
+					}elseif( $request_uri_arr[1]!='~'.$current_domain.'~' && $hide_default_domain===false ){
+						$redirection=sprintf('%s/~%s~%s', $server_name, $current_domain, $request_uri);
 					}
 				}
 			}
@@ -525,6 +528,9 @@ class FW{
 		define('DOMAIN_PATH', $domain_path);
 	}
 	
+	/**
+	 * метод определяет константу DOMAIN_PATH
+	 */
 	public static function getDomainPathValue($use_multidomains, $use_subdomains, $domain){
 		$domain_path='';
 		if( $use_multidomains===true && $use_subdomains===false ){
@@ -533,6 +539,9 @@ class FW{
 		return $domain_path;
 	}
 
+	/**
+	 * метод устанавливает константу IS_FIRST
+	 */
 	public static function setIsFirst(){
 		$bool=self::getIsFirstValue(USE_MULTIDOMAINS, USE_SUBDOMAINS, HIDE_DEFAULT_DOMAIN, DOMAIN_PATH, $GLOBALS['path_requested']);
 		define('IS_FIRST', $bool);
@@ -561,40 +570,42 @@ class FW{
 		return $bool;
 	}
 
-	public static function startSessions(){
+	/**
+	 * метод стартует сессию
+	 * для админ-зоны и для клиент-зоны куки с разными именами
+	 * чтобы можно было хранить их разное время:
+	 * храним куку в админ-зоне 1 месяц
+	 * храним куку в клиент-зоне 18 минут
+	 */
+	public static function startSession(){
+		// стартуем сессию
 		if(isset($GLOBALS['path'][1]) && $GLOBALS['path'][1]=='admin'){
-			// время хранения данных на сервере (сек.)
-			ini_set('session.gc_maxlifetime', '86400');
-			// время хранения куки у клиента (сек.)
-			// ноль — пока не закроют браузер
-			ini_set('session.cookie_lifetime', '0');
-			// использовать только куки (1 или 0)
-			ini_set('session.use_only_cookies', '1');
+			$name='FWSID';
+			$time=3600*24*30;
+			$path='/admin/';
+		}else{
+			$name='PHPSESSID';
+			$time=60*18;
+			$path='/';
 		}
-		// если используются субдомены, то делаем общую сессию для всех субдоменов
-		if(USE_SUBDOMAINS===true){
-			$cookie_domain='.'.removeSubdomain();
-			ini_set('session.cookie_domain',$cookie_domain);
-		}
-		//стартуем сессию
+		session_name($name);
+		session_set_cookie_params( $time, $path , '.'.removeSubdomain() );
 		session_start();
 	}
 
 	/**
-	 * Выводим закешированую страницу для $_SERVER['REQUEST_URI'] и выполняем exit
-	 * При отсутствии закешированой страницы - ничего не делаем
-	 * Если страница устарела - чистим кеш (и файл и записи в таблицах _cache и _cache__models_rel)
-	 * 
-	 * Время жизни пишется первой строкой в файле кеша
-	 *
+	 * данный метод лишь вызывает глобальную функцию try2useCache()
 	 */
 	public static function tryUseCache(){
-		//инклюдим кэш только если он используется
+		// инклюдим кэш только если он используется
 		if(USE_CACHE===true){
 			try2useCache();
 		}
 	}
 
+	/**
+	 * метод загружает классы, необходимые для работы FW
+	 */
 	public static function includeClasses(){
 		include_once(FW_DIR.'/classes/compressor.class.php');
 		if(USE_DB===true){
@@ -603,79 +614,136 @@ class FW{
 			include_once(FW_DIR.'/classes/modelmanager.class.php');
 			include_once(FW_DIR.'/classes/field.class.php');
 			include_once(FW_DIR.'/classes/formitems.class.php');
-			//model.cache.class.php и model.models.class.php нам нужно загружать в любом случае, 
-			//поскольку функция кэширования может быть включена и выключена в любой момент, 
-			//и при этом администратор может работать с контентом,
-			//и закэшированные страницы должны своевременно удалятся 
-			//ну а модель _Models необходима для корректной работы _Cache
+			/*
+			классы MODEL.CACHE.CLASS.PHP 
+			и MODEL.MODELS.CLASS.PHP 
+			нам нужно загружать в любом случае (даже если USE_CACHE==false)
+			поскольку обе они нужны для корректной работы кэширования
+			
+			почему следует подключать эти классы, даже когда кэширование отключено?
+			потому что это позволит своевременно удалять из кэша устаревшие данные
+			
+			например, кэширование было включено на некоторое время 
+			и в кэш попали некоторые страницы. Затем кэш отключили и занялись 
+			редактированием контента. В результате изменилась одна из страниц, 
+			которая до этого попала в кэш. Если бы модели не были загружены, 
+			то страница осталась в кэше и пользователи увидели старую версию страницы.
+			*/
 			include_once(FW_DIR.'/classes/model.cache.class.php'); 
 			include_once(FW_DIR.'/classes/model.models.class.php');
-			if(false
-				|| !isset($GLOBALS['path'][1])
-				|| $GLOBALS['path'][1]!='admin' //для клиентской части
-				|| (DEBUG===true && DEBUG_DB===true) //для админки, если включена отладка ДБ
-			){
+			// подключаем Smarty и CLIENTSIDE.CLASS.PHP
+			// для клиент-зоны или для отладки БД
+			$include_clientside=true;
+			if( isset($GLOBALS['path'][1]) && $GLOBALS['path'][1]=='admin' ){
+				if( DEBUG===false || DEBUG_DB===false ){
+					$include_clientside=false;
+				}
+			}
+			if( $include_clientside ){
 				include_once(SMARTY_LIBS.'/Smarty.class.php');
 				include_once(FW_DIR.'/classes/clientside.class.php');
 			}
 		}
 	}
-
+	
+	/**
+	 * метод отправляет кодировку сайта с заголовком сервера
+	 */
+	public static function sendEncodingHeader(){
+		$encoding=strtolower(SITE_ENCODING);
+		header('Content-Type: text/html; charset='.$encoding);
+	}
+	
+	/**
+	 * метод либо прекращает работу (DONT_INCLUDE_CALLEE===true)
+	 * либо передает управление одному из обработчиков
+	 */
 	public static function run(){
-		//устанавливаем кодировку
-		$charset=defined('SITE_ENCODING')?strtolower(SITE_ENCODING):'utf-8';
-		header('Content-Type: text/html; charset='.$charset);
-		//создаем экземпляр класса Admin (он нам понадобится в любом случае)
-		if(USE_DB!==false && !isset($GLOBALS['obj_admin'])){
-			$GLOBALS['obj_admin']=new Admin();
-		}
-
-		//возможно следует запустить файл на сервере. 
-		//определяем название файла (по-умолчанию - index.php)
-		$script_location=$_SERVER['REQUEST_URI'];
-		if(mb_substr($script_location,-1)=='/'){
-			$script_location.='index.php';
-		}
-		//если установлен флаг DONT_INCLUDE_CALLEE, то прекращаем работу
+		// если установлен флаг DONT_INCLUDE_CALLEE, то прекращаем работу
 		if(DONT_INCLUDE_CALLEE===true){return;}
-		//проверяем, имеется ли файл на сервере
-		if(file_exists(SITE_DIR.$script_location)){
-			//файл присутствует
-			//если запрашивается файл из специальной папки __<имя папки>, то не запускаем файл
-			if(mb_substr($script_location,0,2)=='__'){return;}
-			//если файл в админ-зоне, то это может быть только php-файл, и у пользователя должна быть сессия
-			if($GLOBALS['path'][1]=='admin' && mb_substr($script_location,-4)=='.php'){
-				if( isset($_SESSION['admin_user']) ){
-					include_once(SITE_DIR.$script_location);
-					// после того как файл был запущен, прекращаем работу
-					exit();
-				}
-			}else{
-				// если FW не используется, то просто подключаем smarty
-				if( USE_DB===false ){
-					include_once(SMARTY_LIBS.'/Smarty.class.php');
-					include_once(FW_DIR.'/classes/clientside.class.php');
-					$GLOBALS['obj_client']=new ClientSide();
-				}
-				include_once(SITE_DIR.$script_location);
-				//если файл все-таки был запущен, то прекращаем работу
+		
+		// создаем экземпляр класса Admin
+		// он нам понадобится в любом случае
+		if( USE_DB===true ){
+			if( !isset($GLOBALS['obj_admin']) ){
+				$GLOBALS['obj_admin']=new Admin();
+			}
+		}
+		
+		// находим путь к php-файлу, на который указывает запрашиваемый URL
+		list($file_name, $file_root_path, $file_full_path)=self::getPHPfileFromUrl(SITE_DIR, $GLOBALS['path']);
+
+		// если файл существует и правила безопасности позволяют его запускать
+		// то передаем ему управление и после завершаем работу 
+		self::try2runPHPfile($file_name, $file_root_path, $file_full_path);
+
+		// иначе находим конечный обработчик и передаем ему управление
+		if( USE_DB===true ){
+			self::getRunFinalHandler();
+		}else{
+			hstatus(404);
+		}
+		
+		exit();
+	}
+	
+	/**
+	 * метод разбирает запрашиваемый браузером URL (после применения редиректов)
+	 * и на его основе получает имя и путь к php-файлу, запрашиваемому пользователем
+	 */
+	public static function getPHPfileFromUrl($site_dir, $globals_path){
+		// из $globals_path (он же $GLOBALS['path']) определяем имя запрашиваемого php-файла
+		// (если там нет php-файла, то предполагаем что это index.php)
+		// также определяем путь к файлу от корня
+		$file_name=last($globals_path);
+		if( mb_substr($file_name,-4) != '.php' ){
+			$file_name='index.php';
+			$globals_path[]='index.php';
+			$file_root_path=implode('/',$globals_path);
+		}
+		// массив $globals_path содержит в первом элементе имя сервера
+		// очищаем первый элемент, чтобы implode('/') превратил массив в путь от корня
+		$globals_path[0]='';
+		$file_root_path=implode('/',$globals_path);
+		// полный путь к запрашиваемому файлу
+		$file_full_path=$site_dir.$file_root_path;
+		
+		return array($file_name, $file_root_path, $file_full_path);
+	}
+
+	/**
+	 * метод проверяет существует ли файл на сервере
+	 * и можно ли его запускать текущему пользователю
+	 * если да, то передает управление и заканчивает работу
+	 */
+	public static function try2runPHPfile($file_name, $file_root_path, $file_full_path){
+		if( file_exists($file_full_path) ){
+			$access=false;
+			if( isset($_SESSION['admin_user']) && !empty($_SESSION['admin_user']) ){
+				$access=true;
+			}elseif( mb_substr($file_root_path,0,7)!='/admin/' ){
+				$access=true;
+			}
+			if( $access ){
+				include($file_full_path);
 				exit();
 			}
+		}
+	}
+
+	/**
+	 * метод определяет конечный обработчик
+	 * для клиент-зоны будет запущен Clientside::init()
+	 * для админ-зоны будет запущен Admin::autopage()
+	 */
+	public static function getRunFinalHandler(){
+		if( !isset($GLOBALS['path'][1]) || $GLOBALS['path'][1]!='admin' ){
+			$GLOBALS['obj_client']=new ClientSide();
+			$GLOBALS['obj_client']->init();
+			$GLOBALS['obj_client']->runTemplate();
 		}else{
-			//файл отсутствует
-			if(USE_DB===false){
-				hstatus(404);
-			}else{
-				if($GLOBALS['path'][1]!='admin'){
-					$GLOBALS['obj_client']=new ClientSide();
-					$GLOBALS['obj_client']->init();
-					$GLOBALS['obj_client']->runTemplate();
-				}else{
-					// запускаем метод ->autopage() объекта Admin
-					$GLOBALS['obj_admin']->autopage();
-				}
-			}
-			exit();
+			// запускаем метод ->autopage() объекта Admin
+			$GLOBALS['obj_admin']->autopage();
 		}
 	}
 }

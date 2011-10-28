@@ -6,24 +6,23 @@ if( empty($_SERVER['DOCUMENT_ROOT']) ){
 	$_SERVER['HTTP_HOST']='msk.mysite.com';
 }
 require_once($_SERVER['DOCUMENT_ROOT'].'/admin/fw/classes/fw.class.php');
-$GLOBALS['FW']=new FW();
 
 class FWTest extends PHPUnit_Framework_TestCase {
 	protected $fw;
 	
-	// protected function setUp(){
-	// 	$GLOBALS['FW']=new FW();
-	// }
-	// 
-	// protected function tearDown(){
-	// 	$GLOBALS['FW']=NULL;
-	// }
+	protected function setUp(){
+		// $this->fw=new FW();
+	}
+	
+	protected function tearDown(){
+		// $this->fw=NULL;
+	}
 	
 	/**
 	 * @test
 	 */
 	public function setDIRs(){
-		$GLOBALS['FW']->setDIRs();
+		FW::setDIRs();
 		$this->assertTrue( defined('SITE_DIR'), 'SITE_DIR defined' );
 		$this->assertEquals( $_SERVER['DOCUMENT_ROOT'], constant('SITE_DIR'), 'SITE_DIR==DOCUMENT_ROOT' );
 		$this->assertTrue( defined('FW_DIR'), 'FW_DIR defined' );
@@ -34,7 +33,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	public function includeSitecfgAndBasefunc(){
-		$GLOBALS['FW']->includeSitecfgAndBasefunc();
+		FW::includeSitecfgAndBasefunc();
 		$this->assertTrue( defined('USE_SUBDOMAINS'), 'USE_SUBDOMAINS defined, so config.php is loaded' );
 		$this->assertTrue( function_exists('getModelObject'), 'getModelObject is function, so functions.php is loaded' );
 	}
@@ -44,7 +43,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @dataProvider getDebugOptionValuesProvider
 	 */
 	public function getDebugOptionValues($debug_options_str, $result){
-		$debug_option_values=$GLOBALS['FW']->getDebugOptionValues($debug_options_str);
+		$debug_option_values=FW::getDebugOptionValues($debug_options_str);
 		$this->assertEquals($result, $debug_option_values);
 	}
 	
@@ -61,7 +60,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	public function setPHP(){
-		$GLOBALS['FW']->setPHP();
+		FW::setPHP();
 		$this->assertEquals(constant('SITE_DIR').'/admin/_php.log', ini_get('error_log'), 'PHP config var "error_log" is set correctly');
 	}
 	
@@ -69,7 +68,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	public function startMbstring(){
-		$GLOBALS['FW']->startMbstring();
+		FW::startMbstring();
 		$this->assertEquals('neutral', strtolower(ini_get('mbstring.language')), 'PHP config var "mbstring.language" is set to "neutral"');
 		$this->assertTrue(defined('SITE_ENCODING'), 'SITE_ENCODING is defined');
 		$this->assertEquals(constant('SITE_ENCODING'), ini_get('mbstring.internal_encoding'), 'PHP config var "mbstring.internal_encoding" is equal to SITE_ENCODING');
@@ -83,7 +82,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	public function ajaxSets(){
-		$GLOBALS['FW']->ajaxSets();
+		FW::ajaxSets();
 		$this->assertTrue( defined('IS_AJAX'), 'IS_AJAX is defined' );
 		$this->assertTrue( is_bool(constant('IS_AJAX')), 'IS_AJAX is bool' );
 	}
@@ -92,7 +91,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	public function connectDB(){
-		$GLOBALS['FW']->connectDB();
+		FW::connectDB();
 		$this->assertTrue( defined('USE_DB'), 'USE_DB is defined' );
 		$this->assertTrue( is_bool(constant('USE_DB')), 'USE_DB is bool' );
 	}
@@ -101,7 +100,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	public function setServerName(){
-		$GLOBALS['FW']->setServerName();
+		FW::setServerName();
 		$this->assertTrue( defined('SERVER_NAME'), 'SERVER_NAME is defined' );
 		$this->assertEquals( $_SERVER['SERVER_NAME'], constant('SERVER_NAME'), 'SERVER_NAME is correct' );
 	}
@@ -113,7 +112,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	public function fixServerRequestUri($request_uri, $fixed_request_uri, $request_uri_original){
 		$_SERVER['REQUEST_URI']=$request_uri;
 		$_SERVER['REQUEST_URI_ORIGINAL']=NULL;
-		$GLOBALS['FW']->fixServerRequestUri();
+		FW::fixServerRequestUri();
 		$this->assertEquals( $request_uri_original, $_SERVER['REQUEST_URI_ORIGINAL'], '$_SERVER[REQUEST_URI_ORIGINAL] is correct' );
 		$this->assertEquals( $fixed_request_uri, $_SERVER['REQUEST_URI'], '$_SERVER[REQUEST_URI] is correct' );
 	}
@@ -133,7 +132,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function setGlobalsPathRequested($request_uri, $result){
 		$_SERVER['REQUEST_URI']=$request_uri;
-		$GLOBALS['FW']->setGlobalsPathRequested();
+		FW::setGlobalsPathRequested();
 		$this->assertEquals($result, $GLOBALS['path_requested'], '$GLOBALS[path_requested] is correct');
 	}
 	
@@ -155,7 +154,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function fixServerRedirectUrl($__uri__, $result){
 		$_GET['__uri__']=$__uri__;
-		$GLOBALS['FW']->fixServerRedirectUrl();
+		FW::fixServerRedirectUrl();
 		$this->assertEquals( $result, $_SERVER['REDIRECT_URL'], '$_SERVER[REDIRECT_URL] is correect' );
 	}
 	
@@ -172,7 +171,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function setGlobalsPath($redirect_url, $result){
 		$_SERVER['REDIRECT_URL']=$redirect_url;
-		$GLOBALS['FW']->setGlobalsPath();
+		FW::setGlobalsPath();
 		$this->assertEquals($result, $GLOBALS['path'], '$GLOBALS[path] is correct');
 	}
 	
@@ -193,7 +192,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function setPrintVersion(){
 		$_GET['__print_version__']=1;
-		$GLOBALS['FW']->setPrintVersion();
+		FW::setPrintVersion();
 		$this->assertTrue(defined('PRINT_VERSION'), 'PRINT_VERSION is defined');
 		$this->assertTrue(constant('PRINT_VERSION'), 'PRINT_VERSION is set correctly');
 	}
@@ -203,7 +202,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @dataProvider getDomainValueProvider
 	 */
 	public function getDomainValue($use_db, $use_multidomains, $server_name, $use_subdomains, $domains_list, $default_domain, $hide_default_domain, $__domain__, $result){
-		$domain=$GLOBALS['FW']->getDomainValue($use_db, $use_multidomains, $server_name, $use_subdomains, $domains_list, $default_domain, $hide_default_domain, $__domain__);
+		$domain=FW::getDomainValue($use_db, $use_multidomains, $server_name, $use_subdomains, $domains_list, $default_domain, $hide_default_domain, $__domain__);
 		$this->assertEquals($result, $domain);
 	}
 	
@@ -223,13 +222,13 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @test
 	 * @dataProvider getDefaultDomainRedirectionProvider
 	 */
-	public function getDefaultDomainRedirection($use_db, $use_multidomains, $current_domain, $server_name, $URL, $use_subdomains, $default_domain, $hide_default_domain, $result){
-		$redirection=$GLOBALS['FW']->getDefaultDomainRedirection($use_db, $use_multidomains, $current_domain, $server_name, $URL, $use_subdomains, $default_domain, $hide_default_domain);
+	public function getDefaultDomainRedirection($use_db, $use_multidomains, $current_domain, $server_name, $request_uri, $use_subdomains, $default_domain, $hide_default_domain, $result){
+		$redirection=FW::getDefaultDomainRedirection($use_db, $use_multidomains, $current_domain, $server_name, $request_uri, $use_subdomains, $default_domain, $hide_default_domain);
 		$this->assertEquals($result, $redirection);
 	}
 	
 	public function getDefaultDomainRedirectionProvider(){
-		// $use_db, $use_multidomains, $current_domain, $server_name, $URL, $use_subdomains, $default_domain, $hide_default_domain
+		// $use_db, $use_multidomains, $current_domain, $server_name, $request_uri, $use_subdomains, $default_domain, $hide_default_domain
 		return array(
 			array(false, true, 'msk', 'msk.meetafora.ru', '/', true, 'msk', true, ''),
 			array(true, false, 'msk', 'msk.meetafora.ru', '/', true, 'msk', true, ''),
@@ -256,7 +255,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	public function setDomainId(){
-		$GLOBALS['FW']->setDomainId();
+		FW::setDomainId();
 		$this->assertTrue(defined('DOMAIN'), 'DOMAIN is defined');
 		$this->assertTrue(defined('DOMAIN_ID'), 'DOMAIN_ID is defined');
 	}
@@ -266,7 +265,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @dataProvider getDomainPathValueProvider
 	 */
 	public function getDomainPathValue($use_multidomains, $use_subdomains, $domain, $result){
-		$GLOBALS['FW']->getDomainPathValue($use_multidomains, $use_subdomains, $domain);
+		FW::getDomainPathValue($use_multidomains, $use_subdomains, $domain);
 	}
 	
 	public function getDomainPathValueProvider(){
@@ -283,7 +282,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	 * @dataProvider getIsFirstValueProvider
 	 */
 	public function getIsFirstValue($use_multidomains, $use_subdomains, $hide_default_domain, $domain_path, $globals_path_requested, $result){
-		$is_first=$GLOBALS['FW']->getIsFirstValue($use_multidomains, $use_subdomains, $hide_default_domain, $domain_path, $globals_path_requested);
+		$is_first=FW::getIsFirstValue($use_multidomains, $use_subdomains, $hide_default_domain, $domain_path, $globals_path_requested);
 		$this->assertEquals($result, $is_first, 'IS_FIRST is correct');
 	}
 	
@@ -297,6 +296,38 @@ class FWTest extends PHPUnit_Framework_TestCase {
 			array(true, false, true, '/~msk~', array('mysite.com','test'), false),
 			array(true, false, false, '/~msk~', array('mysite.com','~msk~'), true),
 			array(true, false, false, '/~msk~', array('mysite.com','~msk~','test'), false),
+		);
+	}
+	
+	// function startSession(){
+	// 	$GLOBALS['path']=array('','admin');
+	// 	// string $name [, string $value [, int $expire = 0 [, string $path [, string $domain [, bool $secure = false [, bool $httponly = false ]]]]]]
+	// 	setcookie('FWSID', '', time()-3600*24, '/', removeSubdomain());
+	// 	// $this->assertFalse( isset($_COOKIE['FWSID']), 'session FWSID not set');
+	// 	FW::startSession();
+	// 	// $this->assertTrue( isset($_COOKIE['FWSID']), 'session FWSID is set' );
+	// }
+	
+	/**
+	 * @test
+	 * @dataProvider getPHPfileFromUrlProvider
+	 */
+	public function getPHPfileFromUrl($site_dir, $globals_path, $result){
+		list($file_name, $file_root_path, $file_full_path)=FW::getPHPfileFromUrl($site_dir, $globals_path);
+		$this->assertEquals($result['file_name'], $file_name, '$file_name is correct');
+		$this->assertEquals($result['file_root_path'], $file_root_path, '$file_root_path is correct');
+		$this->assertEquals($result['file_full_path'], $file_full_path, '$file_full_path is correct');
+	}
+	
+	public function getPHPfileFromUrlProvider(){
+		return array(
+			array( '/Users/ev/Sites/starter_local/www', array('mysite.com'), array('file_name'=>'index.php', 'file_root_path'=>'/index.php', 'file_full_path'=>'/Users/ev/Sites/starter_local/www/index.php') ),
+			array( '/Users/ev/Sites/starter_local/www', array('mysite.com', 'about'), array('file_name'=>'index.php', 'file_root_path'=>'/about/index.php', 'file_full_path'=>'/Users/ev/Sites/starter_local/www/about/index.php') ),
+			array( '/Users/ev/Sites/starter_local/www', array('mysite.com', 'test.php'), array('file_name'=>'test.php', 'file_root_path'=>'/test.php', 'file_full_path'=>'/Users/ev/Sites/starter_local/www/test.php') ),
+			array( '/Users/ev/Sites/starter_local/www', array('mysite.com', 'about', 'test.php'), array('file_name'=>'test.php', 'file_root_path'=>'/about/test.php', 'file_full_path'=>'/Users/ev/Sites/starter_local/www/about/test.php') ),
+			array( '/Users/ev/Sites/starter_local/www', array('mysite.com', 'this.is.my.test.php'), array('file_name'=>'this.is.my.test.php', 'file_root_path'=>'/this.is.my.test.php', 'file_full_path'=>'/Users/ev/Sites/starter_local/www/this.is.my.test.php') ),
+			array( '/Users/ev/Sites/starter_local/www', array('mysite.com', 'this', 'is.my.test'), array('file_name'=>'index.php', 'file_root_path'=>'/this/is.my.test/index.php', 'file_full_path'=>'/Users/ev/Sites/starter_local/www/this/is.my.test/index.php') ),
+			array( '/Users/ev/Sites/starter_local/www', array('mysite.com', 'simple', 'plain.html'), array('file_name'=>'index.php', 'file_root_path'=>'/simple/plain.html/index.php', 'file_full_path'=>'/Users/ev/Sites/starter_local/www/simple/plain.html/index.php') ),
 		);
 	}
 }
