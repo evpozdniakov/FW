@@ -122,7 +122,7 @@ class FW{
 		
 		// подкючаем класс для отладки запросов к БД
 		if(DEBUG_DB===true){
-			require_once(LIB_DIR. 'debug/debug_db.php');
+			require_once(LIB_DIR.'/debug/debug_db.php');
 			new Debug_db(DEBUG_DB_SAVE_STACK, DEBUG_DB_INCLUDE_RES);
 		}
 	}
@@ -282,7 +282,10 @@ class FW{
 			$use_db=true;
 			include_once(FW_DIR.'/classes/db.class.php');
 			$db=new DB();
-			$db::connect();
+			/*
+				TODO разобраться почему не работает $db::connect();
+			*/
+			$db->connect();
 		}
 		define('USE_DB', $use_db);
 	}

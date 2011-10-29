@@ -1,3 +1,4 @@
+set names utf8;
 -- MySQL dump 10.13  Distrib 5.1.39, for apple-darwin10.0.0 (i386)
 --
 -- Host: localhost    Database: starter

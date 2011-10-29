@@ -180,11 +180,11 @@ class Compressor{
 	}
 	
 	function getRootFilePathWithMtime($fullpath){
-		_print_r('call filemtime ',$fullpath);
+		// _print_r('call filemtime ',$fullpath);
 		// добавляем дату последнего изменения только если файл находится 
 		// в папке /media/ или /admin/media/
 		// потому что для этих папок действует нужный RewriteRule
-		$file_dir=dirnam($fullpath);
+		$file_dir=dirname($fullpath);
 		$root_dir=mb_substr($file_dir,mb_strlen(SITE_DIR));
 		$file_name=basename($fullpath);
 		if( mb_strpos($fullpath, SITE_DIR.'/media/')===0 || mb_strpos($fullpath, SITE_DIR.'/admin/media/')===0 ){

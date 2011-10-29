@@ -18,7 +18,7 @@ class Debug_db{
 		$this->includeRes = $includeRes;
 		$this->ignoresRe = $ignoresRe;
 		$this->returnCaller = $returnCaller;
-		$this->url = LIB_DIR.'debug/debug_db.php';
+		$this->url = LIB_DIR.'/debug/debug_db.php';
 //		$this->ctrl_get();
 		
 //		if(empty($GLOBALS['debug_db_item']))

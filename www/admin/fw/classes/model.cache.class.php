@@ -54,7 +54,7 @@ class _Cache extends Model{
 		$this->u=new CharField(array('URL страницы','blank'=>true));
 		$this->e=new IntField(array('Expired time','blank'=>true,'help_text'=>'в формате Unix'));
 		$this->v=new CharField(array('View','blank'=>true,'команда создания блока'));
-		$this->_cache_models=new ManyToManyField(array('Связка с моделями','modelrel'=>'_models','blank'=>true));
+		$this->_cache__models=new ManyToManyField(array('Связка с моделями','modelrel'=>'_models','blank'=>true));
 	}
 
 	function __str__($self){
