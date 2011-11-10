@@ -132,7 +132,7 @@ class Compressor{
 						// если он находится в папке /media/ или /admin/media/
 						$root_relative_path=$this->getRootFilePathWithMtime($item['fullpath']);
 					}else{
-						$root_relative_path=sprintf('%s_%s.%s.js', $dir, basename($item['fullpath'],'.js'), mb_substr(_crypt($item['fullpath'],filemtime($item['fullpath'])),0,8) );
+						$root_relative_path=sprintf('%s_%s.%s.js', $dir, basename($item['fullpath'],'.js'), mb_substr(_crypt($item['fullpath'].filemtime($item['fullpath'])),0,8) );
 						if( !file_exists(SITE_DIR.$root_relative_path) ){
 							file_put_contents(SITE_DIR.$root_relative_path, file_get_contents($item['fullpath']));
 						}
