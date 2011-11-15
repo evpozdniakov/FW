@@ -82,7 +82,7 @@ class FW{
 	 */
 	public static function setDIRs(){
 		if( !defined('SITE_DIR') ){
-			define('SITE_DIR', $_SERVER['DOCUMENT_ROOT']);
+			define('SITE_DIR', realpath($_SERVER['DOCUMENT_ROOT']));
 		}
 		if( !defined('FW_DIR') ){
 			define('FW_DIR', SITE_DIR.'/admin/fw');
@@ -104,6 +104,7 @@ class FW{
 	 * устанавливает константу DEBUG=false, если она не была задана ранее
 	 * устанавливает константы DEBUG_*
 	 * при необходимости подкючает класс для отладки запросов к БД
+	 * устанавливает обработчик исключений по-умолчанию
 	 */
 	public static function debugInit(){
 		// если отладка не включена специально, предполагаем что она выключена
@@ -125,6 +126,22 @@ class FW{
 			require_once(LIB_DIR.'/debug/debug_db.php');
 			new Debug_db(DEBUG_DB_SAVE_STACK, DEBUG_DB_INCLUDE_RES);
 		}
+		
+		// устанавливаем обработчик исключений по-умолчанию
+		set_exception_handler('FW::catchExceptionGeneral');
+	}
+	
+	/**
+	 * обработчик исключений по-умолчанию
+	 * сохраняет ошибку в _fw.log
+	 * при DEBUG===true выводит сообщение об ошибке на экран
+	 */
+	public static function catchExceptionGeneral($e){
+		$message=sprintf("ERROR in line %s in file %s\r\n%s\r\n%s",$e->getLine(),$e->getFile(),$e->getMessage(),$e->getTraceAsString());
+		if( DEBUG ){
+			_print_r($message);
+		}
+		error_log($message);
 	}
 	
 	/**

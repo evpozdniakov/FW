@@ -4,6 +4,12 @@
 
 /* ************ НАСТРОЙКИ САЙТА ************ */
 
+/*версия html*/
+define('HTML_VERSION', 5);
+
+/*кодировка сайта*/
+define('SITE_ENCODING', 'UTF-8');
+
 /*субдомены*/
 // будет ли контент сайта распределятся по доменам
 // если false, то все остальные опции — USE_SUBDOMAINS DOMAINS_LIST DEFAULT_DOMAIN HIDE_DEFAULT_DOMAIN — не имеют значения
@@ -59,9 +65,6 @@ define('DBUSER', 'starter');
 define('DBPASSWORD', 'starter');
 define('DBSETNAMES', 'utf8');
 
-/*кодировка сайта*/
-define('SITE_ENCODING', 'UTF-8');
-
 /*шифрование*/
 define('CRYPT_METHOD', 'sha1');
 
@@ -94,7 +97,7 @@ define('SMARTY_SYNTAX', '{ }');
 
 /*кэширование*/
 // включение/выключение режима кэширования страниц сайта
-define('USE_CACHE', true);
+define('USE_CACHE', false);
 // папка кэша
 define('CACHE_DIR', $_SERVER['DOCUMENT_ROOT'].'/../fwcache');
 

@@ -1,21 +1,17 @@
 <?php
 
 if( empty($_SERVER['DOCUMENT_ROOT']) ){
-	$_SERVER['DOCUMENT_ROOT']=realpath(__dir__).'/../../..';
+	$_SERVER['DOCUMENT_ROOT']=realpath(__dir__.'/../../..');
 	$_SERVER['SERVER_NAME']='msk.mysite.com';
 	$_SERVER['HTTP_HOST']='msk.mysite.com';
 }
 require_once($_SERVER['DOCUMENT_ROOT'].'/admin/fw/classes/fw.class.php');
 
 class FWTest extends PHPUnit_Framework_TestCase {
-	protected $fw;
-	
 	protected function setUp(){
-		// $this->fw=new FW();
 	}
 	
 	protected function tearDown(){
-		// $this->fw=NULL;
 	}
 	
 	/**
