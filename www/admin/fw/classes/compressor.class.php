@@ -30,9 +30,7 @@ class Compressor{
 	 * то следует воспользоваться методом self::addCssAlone()
 	 * иначе код файла будет помещен в другую папку, и связи с картинками могут потеряться
 	 */
-	public static function addCss($file_root_path, $compress='', $media=''){
-		$compress=defvar(true,$compress);
-		$media=defvar('screen',$media);
+	public static function addCss($file_root_path, $compress=true, $media='screen'){
 		if( !file_exists(SITE_DIR.$file_root_path) ){
 			throw new Exception(sprintf('file not found: %s',$file_root_path), 1001);
 		}elseif( is_dir(SITE_DIR.$file_root_path) ){
@@ -65,8 +63,7 @@ class Compressor{
 	 * то следует воспользоваться методом self::addJsAlone()
 	 * иначе код файла будет помещен в другую папку, и связи могут потеряться
 	 */
-	public static function addJs($file_root_path, $compress='', $charset=''){
-		$compress=defvar(true,$compress);
+	public static function addJs($file_root_path, $compress=true, $charset=''){
 		if( !file_exists(SITE_DIR.$file_root_path) ){
 			throw new Exception(sprintf('file not found: %s',$file_root_path), 1001);
 		}elseif( is_dir(SITE_DIR.$file_root_path) ){
@@ -90,8 +87,7 @@ class Compressor{
 	 * это нужно для того, чтобы можно было подключить файл стилей, 
 	 * который может ссылаться на относительные картинки
 	 */
-	public static function addCssAlone($file_root_path, $media=''){
-		$media=defvar('screen',$media);
+	public static function addCssAlone($file_root_path, $media='screen'){
 		if( !file_exists(SITE_DIR.$file_root_path) ){
 			throw new Exception(sprintf('file not found: %s',$file_root_path), 1001);
 		}elseif( is_dir(SITE_DIR.$file_root_path) ){
@@ -341,8 +337,7 @@ class Compressor{
 	 * запускает self::getOutCss() и получает от него массив файлов для вызова
 	 * и наконец формирует для каждого ссылку вызова и выводит через echo
 	 */
-	public static function outCss($root_dir=''){
-		$root_dir=defvar('/media/css',$root_dir);
+	public static function outCss($root_dir='/media/css'){
 		self::$css_out_root_dir=self::getRootDir( $root_dir );
 
 		$out=self::getOutCss(DEBUG);
@@ -360,8 +355,7 @@ class Compressor{
 	 * запускает self::getOutJs() и получает от него массив файлов для вызова
 	 * и наконец формирует для каждого ссылку вызова и выводит через echo
 	 */
-	public static function outJs($root_dir=''){
-		$root_dir=defvar('/media/js',$root_dir);
+	public static function outJs($root_dir='/media/js'){
 		self::$js_out_root_dir=self::getRootDir( $root_dir );
 
 		$out=self::getOutJs(DEBUG, SITE_ENCODING);

@@ -529,8 +529,12 @@ class CompressorTest extends PHPUnit_Framework_TestCase {
 	 * @dataProvider outCssProvider
 	 */
 	public function outCss($root_dir, $result){
+		$params=array();
+		if( !empty($root_dir) ){
+			$params['root_dir']=$root_dir;
+		}
 		ob_start();
-		Compressor::outCss($root_dir);
+		call_user_func_array(array('Compressor','outCss'), $params);
 		ob_end_clean();
 		$this->assertEquals($result, Compressor::$css_out_root_dir, 'Compressor::$css_out_root_dir is correct');
 	}
@@ -560,8 +564,12 @@ class CompressorTest extends PHPUnit_Framework_TestCase {
 	 * @dataProvider outJsProvider
 	 */
 	public function outJs($root_dir, $result){
+		$params=array();
+		if( !empty($root_dir) ){
+			$params['root_dir']=$root_dir;
+		}
 		ob_start();
-		Compressor::outJs($root_dir);
+		call_user_func_array(array('Compressor','outJs'), $params);
 		ob_end_clean();
 		$this->assertEquals($result, Compressor::$js_out_root_dir, 'Compressor::$js_out_root_dir is correct');
 	}

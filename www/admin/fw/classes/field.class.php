@@ -68,7 +68,7 @@ class Field{
 		*/
 		$this->model_name=$model_name;//название родительской модели
 		$this->db_column=$db_column;//название поля таблицы в БД
-		if( !$GLOBALS['obj_admin']->isASynchroProcess()){
+		if( !Admin::isASynchroProcess()){
 			$this->field_name=$this->model_name.'['.$this->db_column.']';//название поля формы
 			$this->status=($this->blank)?'0':'1';//флаг обязательности поля
 			$this->choices=$this->_getChoicesArr();
@@ -551,7 +551,7 @@ class Field{
 
 	function _getDbColumnNameBeforeChanges(){
 		$result=$this->db_column;
-		if( !$GLOBALS['obj_admin']->isASynchroProcess() ){
+		if( !Admin::isASynchroProcess() ){
 			if(isset($GLOBALS['db_column_bak']) && $GLOBALS['db_column_bak']['new']==$this->db_column){
 				$result=$GLOBALS['db_column_bak']['old'];
 			}
@@ -594,7 +594,9 @@ class Field{
 			//получить массив данных, запустив соответствующий метод родительской модели
 			$parent_model=getModelObject($this->model_name);
 			$method_name=mb_substr($this->choices,0,-2);
-			$result=$parent_model->$method_name();
+			if( method_exists($parent_model, $method_name) ){
+				$result=call_user_func(array($parent_model, $method_name));
+			}
 		}
 		return $result;
 	}

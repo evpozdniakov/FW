@@ -2,6 +2,8 @@
 //$_SESSION['admin_user']=array('id'=>1,'su'=>true);
 //var_dump($_SESSION);
 class Admin{
+	private static $obj_models_arr=array();
+	
 	function autopage(){//показывает страницу в зависимости от URL
 		if(p2v('action')=='login'){
 			$this->try2login();
@@ -132,36 +134,73 @@ class Admin{
 		include(FW_DIR.'/classes/templates/admin/models_list.php');
 		return $result;
 	}
+	
+	public static function &getModelObj($model_name){
+		$model_name=strtolower($model_name);
+		if( array_key_exists($model_name,self::$obj_models_arr) ){
+			$obj_model =& self::$obj_models_arr[$model_name];
+		}else{
+			$obj_model =& self::createModelObj($model_name);
+		}
+		
+		return $obj_model;
+	}
 
 	/**
 	 * создает объект модели $model_name
 	 * эта функция не должна вызываться напрямую, 
 	 * для создания объекта нужно использовать getModelObject() или gmo()
 	 */
-	function &createModelObj($model_name){//создает объект модели с именем $model_name
+	private static function &createModelObj($model_name){
 		//инлюдим код с описанием класса если описание модели еще не доступно
 		if( !class_exists($model_name) ){
-			$scriptLocation=sprintf('%s/%s/_models.php', MODELS_DIR, $model_name);
+			$model_full_path=sprintf('%s/%s/_models.php', MODELS_DIR, $model_name);
 			if( !array_key_exists($model_name,$GLOBALS['INSTALLED_APPS']) ){
-				_die('Model is not in MODELS_DIR/_settings.php',$model_name);
-			}elseif( !file_exists($scriptLocation) ){
-				_die('Cant load',$scriptLocation);
+				_die("Model \"$model_name\" is not in MODELS_DIR/_settings.php");
+			}elseif( !file_exists($model_full_path) ){
+				_die('Cant load',$model_full_path);
 			}else{
-				include($scriptLocation);
+				include_once($model_full_path);
 			}
 		}
 		//чтобы найти текстовое название модели обращаемся к $GLOBALS['INSTALLED_APPS']
 		$model_txt_name=(isset($GLOBALS['INSTALLED_APPS'][$model_name]))?$GLOBALS['INSTALLED_APPS'][$model_name]:$model_name;
-		//создаем экземпляр модели и сразу! помещаем его в $GLOBALS['obj_models_arr']
-		$GLOBALS['obj_models_arr'][$model_name] =& new $model_name($model_txt_name);//_print_r($GLOBALS['obj_models_arr']);
+		//создаем экземпляр модели и сразу! помещаем его в self::$obj_models_arr
+		self::$obj_models_arr[$model_name] =& new $model_name($model_txt_name);
 		//запускаем метод init() новой модели, чтобы инициализировать все поля
-		$GLOBALS['obj_models_arr'][$model_name]->init(); 
+		call_user_func(array(self::$obj_models_arr[$model_name],'init'));
+
 		//возвращаем
-		return $GLOBALS['obj_models_arr'][$model_name];
+		return self::$obj_models_arr[$model_name];
+	}
+	
+	public static function &getModelView($model_name){
+		$view_name=strtolower($model_name).'__views_obj';
+		if( array_key_exists($view_name,self::$obj_models_arr) ){
+			$obj_view =& self::$obj_models_arr[$view_name];
+		}else{
+			$obj_view =& self::createModelView($model_name);
+		}
+		
+		return $obj_view;
+	}
+	
+	private static function &createModelView($model_name){
+		$obj_model=self::getModelObj($model_name);
+		if( file_exists($obj_model->__views__) ){
+			include_once($obj_model->__views__);
+			$view_class_name=$obj_model->__name__.'Views';
+			$view_name=$obj_model->__name__.'__views_obj';
+			self::$obj_models_arr[$view_name] =& new $view_class_name();
+			if( is_object(self::$obj_models_arr[$view_name]) && is_subclass_of(self::$obj_models_arr[$view_name], $obj_model->__name__) ){
+				// _print_r();
+				return self::$obj_models_arr[$view_name];
+			}
+		}
 	}
 
 	function getModelNameById($id){
-		foreach($GLOBALS['obj_models_arr'] as $model_name=>$obj_model){
+		foreach(self::$obj_models_arr as $model_name=>$obj_model){
 			if(isset($obj_model->registred_id) && $obj_model->registred_id==$id){
 				$result=$model_name;
 				break;
@@ -174,9 +213,9 @@ class Admin{
 				'_slice'=>'0',//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
 			));
 			foreach($all_models as $model){
-				//если модель уже есть в $GLOBALS['obj_models_arr'], то добавляем свойство registred_id
-				if(isset($GLOBALS['obj_models_arr'][$model['name']]) && !isset($GLOBALS['obj_models_arr'][$model['name']]->registred_id)){
-					$GLOBALS['obj_models_arr'][$model['name']]->registred_id=$model['id'];
+				//если модель уже есть в self::$obj_models_arr, то добавляем свойство registred_id
+				if(isset(self::$obj_models_arr[$model['name']]) && !isset(self::$obj_models_arr[$model['name']]->registred_id)){
+					self::$obj_models_arr[$model['name']]->registred_id=$model['id'];
 				}
 				//возвращаем название модели
 				if($model['id']==$id){
@@ -289,7 +328,7 @@ class Admin{
 		hexit('Location: '.DOMAIN_PATH.'/admin/');
 	}
 
-	function isASynchroProcess(){
+	public static function isASynchroProcess(){
 		return (bool)(p2v('action')=='synchro');
 	}
 
