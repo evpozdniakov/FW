@@ -30,7 +30,7 @@ class ManyToManyField extends Field{
 			include($view_template_file);
 		}else{
 			$rel_model_name=$this->_getModelrelOrFindIt();//админка основной модели (products для products_usages_rel)
-			$obj_rel_model=getModelObject($rel_model_name);
+			$obj_rel_model=gmo($rel_model_name);
 			//получаем список элементов объекта
 			$mmanager=$obj_rel_model->objects();
 			$rel_model_elements=$mmanager->_slice(0);
@@ -176,7 +176,7 @@ class ManyToManyField extends Field{
 			$dbq=new DBQ('select * from '.$tabname.' where @=?',$key1,$params_arr['id']);
 			if(is_array($dbq->items)){
 				//создаем объект модели, привязанной к текущему
-				$obj_model_rel=getModelObject($rel_model_name);
+				$obj_model_rel=gmo($rel_model_name);
 				foreach($dbq->items as $item){
 					//создаем элемент модели
 					$model_item=new $obj_model_rel(array('id'=>$item[$key2]));
@@ -317,7 +317,7 @@ class ManyToManyField extends Field{
 			}
 		}
 		//проверяем существует ли реально модель с таким названием
-		$obj_model=getModelObject($result);
+		$obj_model=gmo($result);
 		if( !is_subclass_of($obj_model,'Model') ){
 			_die('Модель «'.$result.'» не найдена. Вероятнее всего неправильно названо поле ManyToMany. (При создании полей типа ManyToMany необходимо назвать поле «model1_model2» или же указывать существующую привязанную модель.)');
 		}

@@ -31,7 +31,7 @@ class FWTest extends PHPUnit_Framework_TestCase {
 	public function includeSitecfgAndBasefunc(){
 		FW::includeSitecfgAndBasefunc();
 		$this->assertTrue( defined('USE_SUBDOMAINS'), 'USE_SUBDOMAINS defined, so config.php is loaded' );
-		$this->assertTrue( function_exists('getModelObject'), 'getModelObject is function, so functions.php is loaded' );
+		$this->assertTrue( function_exists('gmo'), 'gmo is function, so functions.php is loaded' );
 	}
 	
 	/**

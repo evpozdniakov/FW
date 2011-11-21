@@ -25,7 +25,7 @@ class ForeignKeyField extends Field{
 		$foreign_model_name=$this->getRelModelName();//_echo($foreign_model_name);
 		if(empty($foreign_model_name)){_die('не определилось название привязанной модели в ForeignKeyField->getFormFieldHTMLtag()'."\n\n".'модель '.$this->model_name."\n".'название поля $this->db_column='.$this->db_column."\n".'привязанная модель $this->model_rel='.$this->model_rel);}
 		//получаем объект привязанной модели
-		$obj_foreign_model=getModelObject($foreign_model_name);
+		$obj_foreign_model=gmo($foreign_model_name);
 		//получаем данные из привязанной модели
 		$foreign_data=ga(array(
 			'classname'=>$foreign_model_name,

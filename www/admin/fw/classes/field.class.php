@@ -592,7 +592,7 @@ class Field{
 		if(is_string($this->choices) && mb_substr($this->choices,-2)=='()'){
 			//если choices определены как, например, getViewsList(), то нужно 
 			//получить массив данных, запустив соответствующий метод родительской модели
-			$parent_model=getModelObject($this->model_name);
+			$parent_model=gmo($this->model_name);
 			$method_name=mb_substr($this->choices,0,-2);
 			if( method_exists($parent_model, $method_name) ){
 				$result=call_user_func(array($parent_model, $method_name));

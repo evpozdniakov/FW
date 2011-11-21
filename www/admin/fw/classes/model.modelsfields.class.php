@@ -117,7 +117,7 @@ class _ModelsFields extends Model{
 		/*
 		_echo('1===========');
 		$model_name=$this->_getModelName();
-		$obj_model=getModelObject($model_name);
+		$obj_model=gmo($model_name);
 		_print_r($obj_model);
 		_echo('1===========');
 		*/
@@ -137,7 +137,7 @@ class _ModelsFields extends Model{
 		$model_name=$this->_getModelName();
 		if(empty($model_name)){_die('$model_name не определен');}
 		//создаем объект модели
-		$obj_model=getModelObject($model_name);
+		$obj_model=gmo($model_name);
 		//получаем объект поля
 		$field_name=$this->db_column;
 		$obj_field=$obj_model->$field_name;
@@ -163,7 +163,7 @@ class _ModelsFields extends Model{
 			$this->_resetModelObjectFields($model_name);
 			//3. изменяем таблицы (если не происходит простое перемещение поля)
 			if( !$up__down ){
-				$obj_model=getModelObject($model_name);
+				$obj_model=gmo($model_name);
 				$obj_model->changeModelsDBtable();
 			}
 		}
@@ -255,7 +255,7 @@ class _ModelsFields extends Model{
 
 	function _getOneModelFields(){
 		//получаем объект _ModelsFields
-		$obj_model=getModelObject('_modelsfields');
+		$obj_model=gmo('_modelsfields');
 		//получаем список полей, привязанных к текущей модели
 		$this->fields_arr=ga(array(
 			'classname'=>'_modelsfields',
@@ -360,7 +360,7 @@ class _ModelsFields extends Model{
 
 	function _resetModelObjectFields($model_name){
 		//удаляем из объекта модели все ссылки на поля
-		$obj_model=getModelObject($model_name);
+		$obj_model=gmo($model_name);
 		foreach(get_object_vars($obj_model) as $field_name=>$obj_field){
 			if(is_object($obj_field) && is_subclass_of($obj_field,'Field')){
 				//глобально удаляем из объекта модели поле $field_name

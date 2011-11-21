@@ -71,7 +71,7 @@ class ImageField extends FileField{
 
 	function getFormFieldHTMLWrap($input_tag,$error_arr){
 		if($this->help_text==''){
-			$obj_model=getModelObject($this->model_name);
+			$obj_model=gmo($this->model_name);
 			$this->help_text=''.$obj_model->_expectedImageSizes($this->sizes);
 		}
 		$result=parent::getFormFieldHTMLWrap($input_tag,$error_arr);
@@ -80,7 +80,7 @@ class ImageField extends FileField{
 
 	function getFormFieldHTMLth($error_arr){
 		if($this->help_text==''){
-			$obj_model=getModelObject($this->model_name);
+			$obj_model=gmo($this->model_name);
 			$this->help_text=''.$obj_model->_expectedImageSizes($this->sizes);
 		}
 		$result=parent::getFormFieldHTMLth($error_arr);

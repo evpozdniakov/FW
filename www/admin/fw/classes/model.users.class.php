@@ -76,13 +76,13 @@ class _Users extends Model{
 		//в случае необходимости вносим изменения в _access
 		if($this->su=='no'){
 			//получаем список моделей
-			$obj_model=getModelObject('_models');
+			$obj_model=gmo('_models');
 			$models_arr=$obj_model->objects();
 			$models_arr=$models_arr->format();
 			$models_arr=$models_arr->filter('name not like "\_%"');
 			$models_arr=$models_arr->_slice(0);//_print_r($models_arr);
 			//получаем список доступов текущего пользователя
-			$obj_model=getModelObject('_access');
+			$obj_model=gmo('_access');
 			$access_arr=$obj_model->objects();
 			$access_arr=$access_arr->filter('_users_id='.$this->id);
 			$access_arr=$access_arr->_slice(0);

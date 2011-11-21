@@ -20,7 +20,7 @@ class TreeField extends Field {
 			$params_arr - массив значений всех свойств элемента модели
 		*/
 		//создаем объект модели
-		$obj_model=getModelObject($this->model_name);
+		$obj_model=gmo($this->model_name);
 		//вытаскиваем рекурсивно дерево элементов
 		$elements_tree=$this->getRecElementsTree($obj_model,$params_arr['id']);
 		//подключаем файл с шаблоном

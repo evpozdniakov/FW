@@ -165,7 +165,7 @@ class _Models extends Model{
 		//пытаемся создать несуществующие таблицы моделей
 		if(is_array($GLOBALS['INSTALLED_APPS'])){
 			foreach($GLOBALS['INSTALLED_APPS'] as $model_name=>$model_txt_name){
-				$obj_model=getModelObject($model_name);
+				$obj_model=gmo($model_name);
 				//обновляем структуру таблицы
 				$result[$model_name]=$obj_model->changeModelsDBtable();
 				//проверяем, имеется ли информация о модели в таблице _models и при необходимости ее добавляем/изменяем
@@ -239,7 +239,7 @@ class _Models extends Model{
 		){
 			//создаем объект модели
 			if($model1_name!=''){
-				$obj_model=getModelObject($model1_name);
+				$obj_model=gmo($model1_name);
 				//пробегаемся по его полям
 				foreach(get_object_vars($obj_model) as $field_name=>$obj_field){
 					if(is_a($obj_field,'ManyToManyField')){
@@ -253,7 +253,7 @@ class _Models extends Model{
 	}
 
 	function _findExtraFields($model_name){
-		$obj_model=getModelObject($model_name);
+		$obj_model=gmo($model_name);
 		//получаем информацию обо всех имеющихся в таблице $model_name полях
 		$dbq=new DBQ('show fields from `'.$model_name.'`');
 		if($dbq->rows>0){
@@ -437,7 +437,7 @@ class _Models extends Model{
 		//содержимое файла после закрывающей скобки (включая ее)
 		$end=mb_substr($_settings_php,$close_brace_position);
 		//получаем массив моделей, имеющихся в таблице _models кроме начинающихся на '_'
-		$models_arr=getModelObject('_models');
+		$models_arr=gmo('_models');
 		$models_arr=$models_arr->objects();
 		$models_arr=$models_arr->filter('`name` not like "\_%"');
 		$models_arr=$models_arr->_slice(0);
@@ -455,14 +455,14 @@ class _Models extends Model{
 
 	function _createNewModelTable(){
 		//создаем объект новой модели
-		$obj_model=getModelObject($this->name);
+		$obj_model=gmo($this->name);
 		//создаем таблицу новой модели (с единственным полем)
 		$obj_model->try2createTable();
 	}
 
 	function _createLinkToMF($item_id){
 		//создаем элемент новой модели
-		$obj_model=getModelObject($this->name);
+		$obj_model=gmo($this->name);
 		foreach(get_object_vars($obj_model) as $field_name=>$obj_field){
 			if(is_subclass_of($obj_field,'Field')){
 				//пропускаем поля id, ip, mdate

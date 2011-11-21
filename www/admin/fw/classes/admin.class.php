@@ -16,14 +16,14 @@ class Admin{
 			//определяем весь документ
 			include(FW_DIR.'/classes/templates/admin/doctype.php');
 		}elseif(p2v('action')=='clear_cache'){
-			$_cache_obj=&gmo('_cache');
+			$_cache_obj=gmo('_cache');
 			$_cache_obj->clearAll();
 			header('Location: /admin/_cache/');
 			exit();
 		}elseif(p2v('action')=='DBcreate'){
 			//показываем sql для создания таблицы
 			$model_name=$GLOBALS['path'][2];
-			$obj_model=getModelObject($model_name);
+			$obj_model=gmo($model_name);
 			$results=$obj_model->getSQLcreateTable();
 			if(is_array($results)){
 				foreach($results as $sql){
@@ -33,7 +33,7 @@ class Admin{
 			exit();
 		}elseif(p2v('action')=='synchro'){
 			//делаем синхронизацию БД по конфигурационным файлам _settings.php и _models.php
-			$model__models=&gmo('_models');
+			$model__models=gmo('_models');
 			$report=$model__models->synchro();
 			//подключаем внешний вид для отчета
 			include(FW_DIR.'/classes/templates/admin/synchro_report.php');
@@ -47,7 +47,7 @@ class Admin{
 				//делаем shortcut имени модели
 				$model_name=$GLOBALS['path'][2];
 				//создаем экземпляр модели
-				$obj_model=getModelObject($model_name);
+				$obj_model=gmo($model_name);
 				//определяем список элементов в модели
 				$obj_model->getModelItemsListHTML();
 			}
@@ -76,7 +76,7 @@ class Admin{
 				//делаем shortcut имени модели
 				$model_name=$GLOBALS['path'][2];
 				//создаем экземпляр модели
-				$obj_model=getModelObject($model_name);
+				$obj_model=gmo($model_name);
 				//сперва определяем зону редактирования
 				//возможно происходит обработка post-запроса, 
 				//и по окончании страница будет перезагружена
@@ -135,12 +135,12 @@ class Admin{
 		return $result;
 	}
 	
-	public static function &getModelObj($model_name){
+	public static function getModelObj($model_name){
 		$model_name=strtolower($model_name);
 		if( array_key_exists($model_name,self::$obj_models_arr) ){
-			$obj_model =& self::$obj_models_arr[$model_name];
+			$obj_model = self::$obj_models_arr[$model_name];
 		}else{
-			$obj_model =& self::createModelObj($model_name);
+			$obj_model = self::createModelObj($model_name);
 		}
 		
 		return $obj_model;
@@ -149,9 +149,9 @@ class Admin{
 	/**
 	 * создает объект модели $model_name
 	 * эта функция не должна вызываться напрямую, 
-	 * для создания объекта нужно использовать getModelObject() или gmo()
+	 * для создания объекта нужно использовать gmo()
 	 */
-	private static function &createModelObj($model_name){
+	private static function createModelObj($model_name){
 		//инлюдим код с описанием класса если описание модели еще не доступно
 		if( !class_exists($model_name) ){
 			$model_full_path=sprintf('%s/%s/_models.php', MODELS_DIR, $model_name);
@@ -166,7 +166,7 @@ class Admin{
 		//чтобы найти текстовое название модели обращаемся к $GLOBALS['INSTALLED_APPS']
 		$model_txt_name=(isset($GLOBALS['INSTALLED_APPS'][$model_name]))?$GLOBALS['INSTALLED_APPS'][$model_name]:$model_name;
 		//создаем экземпляр модели и сразу! помещаем его в self::$obj_models_arr
-		self::$obj_models_arr[$model_name] =& new $model_name($model_txt_name);
+		self::$obj_models_arr[$model_name] = new $model_name($model_txt_name);
 		//запускаем метод init() новой модели, чтобы инициализировать все поля
 		call_user_func(array(self::$obj_models_arr[$model_name],'init'));
 
@@ -174,29 +174,106 @@ class Admin{
 		return self::$obj_models_arr[$model_name];
 	}
 	
-	public static function &getModelView($model_name){
+	public static function getModelView($model_name){
 		$view_name=strtolower($model_name).'__views_obj';
 		if( array_key_exists($view_name,self::$obj_models_arr) ){
-			$obj_view =& self::$obj_models_arr[$view_name];
+			$obj_view = self::$obj_models_arr[$view_name];
 		}else{
-			$obj_view =& self::createModelView($model_name);
+			$obj_view = self::createModelView($model_name);
 		}
 		
 		return $obj_view;
 	}
 	
-	private static function &createModelView($model_name){
+	private static function createModelView($model_name){
 		$obj_model=self::getModelObj($model_name);
 		if( file_exists($obj_model->__views__) ){
 			include_once($obj_model->__views__);
 			$view_class_name=$obj_model->__name__.'Views';
 			$view_name=$obj_model->__name__.'__views_obj';
-			self::$obj_models_arr[$view_name] =& new $view_class_name();
+			self::$obj_models_arr[$view_name] = new $view_class_name();
 			if( is_object(self::$obj_models_arr[$view_name]) && is_subclass_of(self::$obj_models_arr[$view_name], $obj_model->__name__) ){
 				// _print_r();
 				return self::$obj_models_arr[$view_name];
 			}
 		}
+	}
+
+	/**
+	 * метод получает два аргумента:
+	 * $view имя обработчика в виде <название модели>:<название метода обработчика>
+	 * $domain (по умолчанию текущий домен DOMAIN_ID)
+	 * задача метода найти раздел сайта к которому привязан обраотчик
+	 * и вернуть путь от корня к этому разделу
+	 * 
+	 * например к странице /sitemap/ привязан обработчик карты сайта
+	 * то при вызове getPathByView('structure:sitemap') будет возвращена строка "/sitemap/"
+	 * 
+	 * метод сообщит об ошибках если:
+	 * 1. обработчик не найден
+	 * 2. обработчик привязан сразу к нескольким разделам сайта
+	 */
+	public static function getPathByView($view, $domain=DOMAIN_ID){
+		// отыскиваем все страницы с обработчиком $view
+		$pages=ga(array(
+			'classname'=>'structure',
+			'domain'=>false,
+			'fields'=>'id parent',
+			'filter'=>e5csql('view=? and domain=?',$view,$domain),//строка фильтра типа 'parent=32'
+			'_slice'=>'0',//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
+		));
+		$count=count($pages);
+		if( $count==0 ){
+			throw new Exception("Zero view $view found", 1101);
+		}elseif( $count>1 ){
+			throw new Exception("View $view is not unique, found $count times", 1102);
+		}else{
+			if($pages[0]['parent']==0){
+				$path='/';
+			}else{
+				$path=getPathById($pages[0]['id'],$domain);
+			}
+		}
+
+		return $path;
+	}
+
+	/**
+	 * метод получает два аргумента:
+	 * $id раздел структуры
+	 * $domain (по умолчанию текущий домен DOMAIN_ID)
+	 * задача метода найти раздел структуры с переданным id
+	 * и вернуть путь путь к нему
+	 */
+	public static function getPathById($id,$domain=DOMAIN_ID){
+		$model_structure=gmo('structure');
+		$parent_id=defvar($model_structure->getStructureRootId(),$domain);
+		$pages_reverse=array();
+		while(true){
+			$pages=ga(array(
+				'classname'=>'structure',
+				'domain'=>false,//не учитывать домен
+				'fields'=>'parent,url',//список полей которые нужно вытащить через запятую 'id,name,body'
+				'filter'=>e5csql('id=? and domain=? and is_hidden="no"',$id,$domain),//строка фильтра типа 'parent=32'
+				'_slice'=>'0',//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
+			));
+			if( empty($pages) ){
+				throw new Exception("Zero pages with id=$id found", 1103);
+			}elseif( $pages[0]['id']==$parent_id ){
+				break;
+			}else{
+				$pages_reverse[]=$pages[0]['url'];
+				$id=$pages[0]['parent'];
+			}
+		}
+		$path=DOMAIN_PATH;
+		if( empty($pages_reverse) ){
+			$path.='/';
+		}else{
+			$path.=sprintf('/%s/',implode('/',array_reverse($pages_reverse)));
+		}
+		
+		return $path;
 	}
 
 	function getModelNameById($id){
@@ -341,7 +418,7 @@ class Admin{
 				//пропускаем модель _access, потому что доступ к ней напрямую не нужен даже суперадмину
 				if($model_name=='_access'){continue;}
 				//создаем экземпляр модели
-				$obj_model=getModelObject($model_name);
+				$obj_model=gmo($model_name);
 				//выясняем имеет ли юзер право доступа к модели, 
 				//если да то помещаем информацию о модели в массив для темплейта
 				if($obj_model->userCanSeeModelInAdmin()){
