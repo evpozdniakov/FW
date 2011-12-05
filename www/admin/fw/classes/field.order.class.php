@@ -58,14 +58,32 @@ class OrderField extends Field {
 	function getModelItemInitValue($hash){
 		$model_item_init_values=$hash['init_values'];
 		//пытаемся вытащить id из инициализирующего массива
-		$id=(isset($model_item_init_values['id']))?intval($model_item_init_values['id']):0;
-		if($id>0){
-			//проверяем имеется ли у поля параметр $this->fieldrel
-			if(empty($this->fieldrel)){
-				$result=(isset($model_item_init_values[$this->db_column]))?$model_item_init_values[$this->db_column]:'';
+		$id = isset($model_item_init_values['id']) ? intval($model_item_init_values['id']) : 0;
+		if( $id==0 ){
+			// происходит процесс добавления элемента модели 
+			// вытаскиваем значение последнего элемента из привязанной модели согласно сортировке по $this->db_column
+			// нужно помнить, что fieldrel может содержать несколько полей через запятую
+			$last_element=ga(array(
+				'classname'=>$this->model_name,
+				'domain'=>(bool)($this->model_name!='structure'),//для модели structure можно сделать исключение, поскольку она вся является деревом, и данное исключение позволит делать копии структуры для новых доменов
+				'fields'=>$this->db_column,//список полей которые нужно вытащить через запятую 'id,name,body'
+				'filter'=>$this->getFilterString($model_item_init_values),//строка фильтра типа 'parent=32'
+				'order_by'=>'-'.$this->db_column,//строка типа или '-cdate' 'parent, +name' или '__random__' - случайный порядок
+				'_slice'=>'0,1',//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
+			));
+			//определяем новое значение для 
+			$result=(isset($last_element[0]))?intval($last_element[0][$this->db_column]):0;
+			$result+=1;
+		}else{
+			// происходит процесс изменения элемента
+			// проверяем имеется ли у поля параметр $this->fieldrel
+			// если поле $this->fieldrel не задано, то возвращаем либо установленное значение, 
+			// либо пустую строку
+			if( empty($this->fieldrel) ){
+				$result = isset($model_item_init_values[$this->db_column]) ? $model_item_init_values[$this->db_column] : '';
 			}else{
 				//проверяем был ли изменен родитель
-				if($this->checkParentsChanged($model_item_init_values)){
+				if( $this->checkParentsChanged($model_item_init_values) ){
 					//родитель (или родители) изменился
 					//находим новое значение для поля
 					//вытаскиваем значение последнего элемента из привязанной модели согласно сортировке по $this->db_column
@@ -84,21 +102,10 @@ class OrderField extends Field {
 					$result=$model_item_init_values[$this->db_column];
 				}
 			}
-		}else{
-			//происходит процесс добавления элемента модели 
-			//вытаскиваем значение последнего элемента из привязанной модели согласно сортировке по $this->db_column
-			//нужно помнить, что fieldrel может содержать несколько полей через запятую
-			$last_element=ga(array(
-				'classname'=>$this->model_name,
-				'domain'=>(bool)($this->model_name!='structure'),//для модели structure можно сделать исключение, поскольку она вся является деревом, и данное исключение позволит делать копии структуры для новых доменов
-				'fields'=>$this->db_column,//список полей которые нужно вытащить через запятую 'id,name,body'
-				'filter'=>$this->getFilterString($model_item_init_values),//строка фильтра типа 'parent=32'
-				'order_by'=>'-'.$this->db_column,//строка типа или '-cdate' 'parent, +name' или '__random__' - случайный порядок
-				'_slice'=>'0,1',//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
-			));
-			//определяем новое значение для 
-			$result=(isset($last_element[0]))?intval($last_element[0][$this->db_column]):0;
-			$result+=1;
+		}
+		// важно чтобы было возвращено числовое значение или пустая строка, но не NULL
+		if( is_null($result) ){
+			$result='';
 		}
 
 		return $result;
@@ -215,5 +222,3 @@ class OrderField extends Field {
 		return $filter;
 	}
 }
-
-?>

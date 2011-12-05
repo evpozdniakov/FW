@@ -84,7 +84,7 @@ class Field{
 			в остальных случаях отдаем $model_item_init_values, а если он пуст, то $model_item_db_values
 			с одним маленьким исключением, которое касается обнуления существуюего значения
 		*/
-		if(!isset($model_item_init_values['id'])){
+		if( !isset($model_item_init_values['id']) ){
 			$result=$this->getModelItemInitValue(array('init_values'=>$model_item_init_values));
 		}elseif( $model_item_init_values['id']>0 && count($model_item_init_values)==1 ){
 			// _print_r('this',$this);
@@ -130,7 +130,7 @@ class Field{
 			// наличие ключа скажет о желании пользователя обнулить поле
 			}elseif( array_key_exists($this->db_column,$model_item_init_values) ){
 				$result='';
-			//в последнем случае нужно вернуть предыдущее значение
+			// в последнем случае нужно вернуть предыдущее значение
 			}else{
 				$result=isset($model_item_db_values[$this->db_column])?$model_item_db_values[$this->db_column]:'';
 			}

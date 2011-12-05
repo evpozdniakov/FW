@@ -324,33 +324,35 @@ class Admin{
 	}
 
 	function try2login(){
-		_log('call try2login, session before');
-		_log($_SESSION['admin_user']);
+		// _log('call try2login, session before');
+		// _log($_SESSION['admin_user']);
 		unset($_SESSION['admin_user']);
 		$login=$_POST['login'];
 		$password=$_POST['password'];
 		$dbq=new DBQ('select id, name, login, su, domain, multidomain from _users where login=? and hash=@(?)',$login,CRYPT_METHOD,$password);
 		if($dbq->rows>1){
-			_log('found more than 1 row');
 			_echo('в БД несколько пользователей с одинаковым именем');
 			_print_r($dbq->items);
 			exit();
 		}elseif($dbq->rows==1){
-			_log('found single row',found);
 			if(false
 				|| $dbq->line['multidomain']=='yes'
 				|| $dbq->line['domain']==DOMAIN_ID
 			){
-				//чистим _php.log если он не сегодняшний
 				$phplog_dir='/admin/';
 				$phplog_file='_php.log';
-				$unix_mtime=filemtime(SITE_DIR.$phplog_dir.$phplog_file);
-				if(date('Ymd',$unix_mtime)!=date('Ymd')){
+				if( !file_exists(SITE_DIR.$phplog_dir.$phplog_file) ){
+					// создаем _php.log, если отсутствует
 					fileWrite($phplog_dir,$phplog_file,'');
+				}else{
+					//чистим _php.log если он не сегодняшний
+					$unix_mtime=filemtime(SITE_DIR.$phplog_dir.$phplog_file);
+					if(date('Ymd',$unix_mtime)!=date('Ymd')){
+						fileWrite($phplog_dir,$phplog_file,'');
+					}
 				}
-				//сохраняем пользователя в сессию
+				// сохраняем пользователя в сессию
 				$_SESSION['admin_user']=$dbq->items[0];//_print_r($_SESSION['admin_user']);
-				_log('set session',$_SESSION['admin_user']);
 				$_SESSION['admin_user']['su']=($_SESSION['admin_user']['su']=='yes');
 				$al=new _AdminLog(array('action'=>'in','adminlogin'=>$_SESSION['admin_user']['login'],'adminid'=>$_SESSION['admin_user']['id']));
 				$al->save();
@@ -359,7 +361,6 @@ class Admin{
 		if(!empty($_SESSION['admin_user'])){
 			$this->fixAccess();
 		}
-		_log('hexit');
 		hexit('Location: '.DOMAIN_PATH.'/admin/'.p2v('uri'));
 	}
 
