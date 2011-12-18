@@ -193,32 +193,6 @@ class Structure extends Model{
 			$dbq=new DBQ('update texts set structure_title=? where id=?',defvar($this->title,$this->alternative),$dbq->items[0]['id']);
 		}
 	}
-	
-	/**
-	* возвращает id корневого элемента структуры (для текущего домена)
-	*/
-	function getStructureRootId(){
-		if($GLOBALS['obj_client'] && $GLOBALS['obj_client']->structure_data){
-			return $GLOBALS['obj_client']->structure_data[0]['id'];
-		}else{
-			if(!$GLOBALS['structure_root_id']){
-				$structure_arr=ga(array(
-					'classname'=>'structure',
-					'fields'=>'id',//список полей которые нужно вытащить через запятую 'id,name,body'
-					'filter'=>'parent=0 and url="'.DOMAIN.'"',//строка фильтра типа 'parent=32'
-					'_slice'=>'0,1',//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
-				));
-				if(count($structure_arr)==1){
-					$GLOBALS['structure_root_id']=$structure_arr[0]['id'];
-				}elseif(count($structure_arr)==0){
-					$GLOBALS['structure_root_id']=0;
-				}else{
-					_die('не найден id самого главного родителя в getStructureRootId()');
-				}
-			}
-			return $GLOBALS['structure_root_id'];
-		}
-	}
 
 	function getAllPlain(){
 		$model_structure=gmo('structure');
@@ -354,12 +328,14 @@ class Structure extends Model{
 	
 	function getUrlByIdRec($id){
 		$url='';
-		$structure_item=$this->getById($id);
-		if(is_array($structure_item)){
-			if($structure_item['parent']>0 && $structure_item['parent']!=DOMAIN_ID){
-				$url=$this->getUrlByIdRec($structure_item['parent']);
+		if( $id!=DOMAIN_ID ){
+			$structure_item=$this->getById($id);
+			if(is_array($structure_item)){
+				if($structure_item['parent']>0){
+					$url=$this->getUrlByIdRec($structure_item['parent']);
+				}
+				$url.=$structure_item['url'].'/';
 			}
-			$url.=$structure_item['url'].'/';
 		}
 		return $url;
 	}

@@ -532,7 +532,7 @@ class Field{
 		$file_path_arr=explode('/',$file_uri);//разбиваем путь к файлу на массив подстрок
 		$file_name=last($file_path_arr);//последний элемент массива это и есть название файла
 		$file_path=mb_substr($file_uri,0,-1*mb_strlen($file_name));//путь к папке
-		if(!try2unlink($file_path,$file_name)){_die('не могу удалить файл «'.$path.$file_name.'»');}
+		if( !try2unlink($file_path,$file_name) ){_die('не могу удалить файл «'.$path.$file_name.'»');}
 	}
 
 	function _getSQLcolumnType(){

@@ -247,7 +247,7 @@ class Admin{
 	 */
 	public static function getPathById($id,$domain=DOMAIN_ID){
 		$model_structure=gmo('structure');
-		$parent_id=defvar($model_structure->getStructureRootId(),$domain);
+		$parent_id=defvar(DOMAIN_ID,$domain);
 		$pages_reverse=array();
 		while(true){
 			$pages=ga(array(

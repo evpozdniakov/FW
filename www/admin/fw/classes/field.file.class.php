@@ -265,14 +265,8 @@ class FileField extends SubfieldsInterface{
 	 */
 	function beforeDelete($params_arr){
 		//путь к файлу
-		if( !empty($params_arr[$this->db_column]) ){
-			$file_uri=$this->path.$params_arr[$this->db_column];
-		}elseif( isset($params_arr[$this->db_column.'_uri']) ){
-			_log('странная ситуация - значение $params_arr[$this->db_column] пусто, а значение $params_arr[$this->db_column_uri] не пусто!');
-			$file_uri=$params_arr[$this->db_column.'_uri'];
-		}
-		if( isset($file_uri) ){
-			//удаляем файл с сервера
+		if( !empty($params_arr[$this->db_column]) && file_exists(SITE_DIR.$params_arr[$this->db_column]) ){
+			$file_uri=$params_arr[$this->db_column];
 			$this->_unlinkOldFile($file_uri);
 		}
 	}

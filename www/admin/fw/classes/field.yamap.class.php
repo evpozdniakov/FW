@@ -92,6 +92,9 @@ class YamapField extends SubfieldsInterface {
 			$zoom=defvar(15,$data[$this->db_column.'_zoom']);
 			$result=sprintf('%s,%s,%d',$data[$this->db_column.'_lat'],$data[$this->db_column.'_lng'],$zoom);
 		}
+		if( is_null($result) ){
+			$result='';
+		}
 		return $result;
 	}
 

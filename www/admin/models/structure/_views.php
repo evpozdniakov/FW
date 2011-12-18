@@ -7,17 +7,122 @@ class StructureViews extends Structure{
  
 	function init(){
 	}
+
+	function menuMain(){
+		// получаем основные разделы
+		$menu=$this->ga(array(
+			'fields'=>'title alternative url',//список полей которые нужно вытащить через запятую 'id,name,body'
+			'filter'=>e5csql('is_hidden="no" and menu_on="yes" and parent=?',DOMAIN_ID),//строка фильтра типа 'parent=32'
+			'order_by'=>'ordering',//строка типа или '-cdate' 'parent, +name' или '__random__' - случайный порядок
+			'_slice'=>array(0),//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
+		));
+		// меняем пути и имена, а также добавляем подразделы
+		foreach($menu as $key=>$item){
+			$item['title']=defvar($item['title'],$item['alternative']);
+			$item['url']=sprintf('/%s/', $item['url']);
+			$item['children']=array();
+			$children1=$this->ga(array(
+				'fields'=>'title alternative url is_groupper',//список полей которые нужно вытащить через запятую 'id,name,body'
+				'filter'=>e5csql('is_hidden="no" and menu_on="yes" and parent=?',$item['id']),//строка фильтра типа 'parent=32'
+				'order_by'=>'ordering',//строка типа или '-cdate' 'parent, +name' или '__random__' - случайный порядок
+				'_slice'=>array(0),//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
+			));
+			// меняем пути и имена у детей, а также
+			// добавляем третий уровень для пунктов, которые являются группираторами
+			$num=0;
+			foreach($children1 as $key2=>$item2){
+				$col14=$num%4;
+				$num++;
+				$item2['title']=defvar($item2['title'],$item2['alternative']);
+				$item2['url']=sprintf('%s%s/', $item['url'], $item2['url']);
+				$item['children'][$col14][]=$item2;
+				if( $item2['is_groupper']=='yes' ){
+					$item2_children=$this->ga(array(
+						'fields'=>'title alternative url',//список полей которые нужно вытащить через запятую 'id,name,body'
+						'filter'=>e5csql('is_hidden="no" and menu_on="yes" and parent=?',$item2['id']),//строка фильтра типа 'parent=32'
+						'order_by'=>'ordering',//строка типа или '-cdate' 'parent, +name' или '__random__' - случайный порядок
+						'_slice'=>array(0),//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
+					));
+					// помещаем детей группираторов прямо вслед за группираторами
+					foreach($item2_children as $item3){
+						$item3['title']=defvar($item3['title'],$item3['alternative']);
+						$item3['url']=sprintf('%s%s/', $item2['url'], $item3['url']);
+						$item['children'][$col14][]=$item3;
+					}
+				}
+			}
+			// наконец, обновляем $item в $menu
+			// и делим детей четыре части по количеству колонок
+			$menu[$key]=$item;
+		}
+		// делим конечный массив $menu на четыре части по количеству колонок
+		// и отдаем Smarty
+		// _log($menu);
+		if( !empty($menu) ){
+			smartas('menu',$menu);
+		}
+	}
+
+	function submenu(){
+		$parent_id=$GLOBALS['obj_client']->structure_data[1]['id'];
+		if($parent_id){
+			$submenu=ga(array(
+				'classname'=>'structure',
+				'fields'=>'url title alternative is_groupper',//список полей которые нужно вытащить через запятую 'id,name,body'
+				'filter'=>e5csql('parent=? and is_hidden="no" and menu_on="yes"',$parent_id),//строка фильтра типа 'parent=32'
+				'order_by'=>'ordering',//строка типа или '-cdate' 'parent, +name', где необязательный "+" это asc, а "-" это desc
+				'_slice'=>'0',//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
+			));
+			// _print_r('$submenu',$submenu);
+			if( !empty($submenu) ){
+				foreach($submenu as $key=>$item){
+					if( !empty($item['alternative']) ){
+						$item['title']=$item['alternative'];
+					}
+					if(mb_strpos($item['url'],'://')>0){
+						$item['http_link']=true;
+						$item['url']=$item['url'];
+					}else{
+						$item['url']=sprintf('/%s/%s/', $GLOBALS['obj_client']->structure_data[1]['url'], $item['url']);
+					}
+					if( $item['is_groupper']=='yes' ){
+						$children=$this->getChildren($item['id']);
+						if( !empty($children) ){
+							$item['children']=array();
+							foreach($children as $child){
+								if( $child['menu_on']=='yes' && $child['is_hidden']=='no' ){
+									$subitem=array(
+										'title'=>defvar($child['title'],$child['alternative']),
+										'alternative'=>$child['alternative'],
+										'url'=>$child['url'],
+									);
+									if(mb_strpos($subitem['url'],'://')>0){
+										$subitem['http_link']=true;
+									}else{
+										$subitem['url']=sprintf('%s%s/', $item['url'], $subitem['url']);
+									}
+									$item['children'][]=$subitem;
+								}
+							}
+						}
+					}
+					$submenu[$key]=$item;
+				}
+				// _print_r($submenu);
+				smartas('submenu',$submenu);
+			}
+		}
+	}
 	
 	function gradusnik(){
-		if(count($GLOBALS['gradusnik'])>2){
-			$gradusnik=array_slice($GLOBALS['gradusnik'],1);
-			$url='/';
-			foreach($gradusnik as $key=>$item){
-				$url.=$item['url'].'/';
-				$gradusnik[$key]['url']=$url;
-			}
-			smartas('gradusnik',$gradusnik);
+		// $gradusnik=array_slice($GLOBALS['gradusnik'],1);
+		$gradusnik=$GLOBALS['gradusnik'];
+		$url='';
+		foreach($gradusnik as $key=>$item){
+			$url.=$item['url'].'/';
+			$gradusnik[$key]['url']=$url;
 		}
+		smartas('gradusnik',$gradusnik);
 	}
 	
 	function titleMetaTags(){
@@ -78,8 +183,7 @@ class StructureViews extends Structure{
 	}
 
 	function menu1(){
-		$parent_id=$this->getStructureRootId();
-		$menu1_arr=$this->getChildren($parent_id);
+		$menu1_arr=$this->getChildren( DOMAIN_ID );
 		// _print_r($menu1_arr);
 		foreach($menu1_arr as $key=>$item){
 			if($item['menu_on']=='yes'){
@@ -99,7 +203,7 @@ class StructureViews extends Structure{
 	}
 
 	function menu12(){
-		$menu1_arr=$this->getChildren($this->getStructureRootId());
+		$menu1_arr=$this->getChildren( DOMAIN_ID );
 		$num1=0;
 		foreach($menu1_arr as $key1=>$item){
 			if( $item['menu_on']!='yes' ){
@@ -163,68 +267,81 @@ class StructureViews extends Structure{
 		smartas('menu12_arr',$menu12_arr);
 	}
 
-	function menu2(){
-		$parent_id=$GLOBALS['obj_client']->structure_data[1]['id'];
-		if($parent_id){
-			$menu2_arr=ga(array(
-				'classname'=>'structure',
-				'fields'=>'url title alternative',//список полей которые нужно вытащить через запятую 'id,name,body'
-				'filter'=>e5csql('parent=? and is_hidden="no" and menu_on="yes"',$parent_id),//строка фильтра типа 'parent=32'
-				'order_by'=>'ordering',//строка типа или '-cdate' 'parent, +name', где необязательный "+" это asc, а "-" это desc
-				'_slice'=>'0',//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
-			));
-			if(count($menu2_arr)){
-				smartas('menu2_prefix','/'.$GLOBALS['obj_client']->structure_data[1]['url'].'/');
-				smartas('menu2_arr',$menu2_arr);
+	function extramenu(){
+		$root_children=$this->getChildren( DOMAIN_ID );
+		$extra=array();
+		foreach($root_children as $item){
+			if( $item['extra_on']=='yes' && $item['is_hidden']=='no' ){
+				$extraitem=array(
+					'title'=>defvar($item['title'],$item['alternative']),
+					'alternative'=>$item['alternative'],
+					'url'=>$item['url'],
+				);
+				if(mb_strpos($extraitem['url'],'://')>0){
+					$extraitem['http_link']=true;
+				}else{
+					$extraitem['url']=sprintf('/%s/', $extraitem['url']);
+				}
+				$extra[]=$extraitem;
 			}
 		}
+		
+		smartas('extra',$extra);
 	}
-	
-	function menuDeep($parent_id_deep=''){
-		// $parent_id_deep через слэш: 158/3
+
+	function menuDeep($parent_deep_type=''){
+		// $parent_id_deep через слэш: 158/3/[all|current]
+		// задаем параметры по-умолчанию
+		$parent=$GLOBALS['obj_client']->structure_data[1]['id'];
 		$deep=3;
-		if(!empty($parent_id_deep)){
-			$explode=explode('/',$parent_id_deep);
-			$parent_id=intval($explode[0]);
-			if(!empty($explode[1])){
-				$deep=$explode[1];
+		$type='current';
+
+		if(!empty($parent_deep_type)){
+			$explode=explode('/',$parent_deep_type);
+			if(!empty($explode[0])){
+				$parent=intval($explode[0]);
 			}
-		}else{
-			$parent_id=$GLOBALS['obj_client']->structure_data[1]['id'];
+			if(!empty($explode[1])){
+				$deep=intval($explode[1]);
+			}
+			if(!empty($explode[2])){
+				$type=$explode[2];
+			}
 		}
-		// _print_r($parent_id,$deep);
-		$start=$this->getUrlById($parent_id);
-		$menu_deep=$this->getDeepRec($parent_id,$start,$deep);
+		// _print_r('$parent,$deep,$type',$parent,$deep,$type);
+		$start=$this->getUrlById($parent);
+		$menu_deep=$this->getDeepRec($parent,$start,$deep,$type);
 		// _print_r($menu_deep);
 		smartas('menu_deep',$menu_deep);
 	}
 	
-	function getDeepRec($id,$start,$deep,$level=1){
-		$result=$this->getChildren($id);
-		foreach($result as $key=>$item){
-			if($item['menu_on']!="yes"){
-				unset($result[$key]);
-				continue;
-			}
-			$item_replace=array('title'=>defvar($item['title'],$item['alternative']));
-			if(mb_strpos($item['url'],'://')>0){
-				$item_replace['http_link']=true;
-			}else{
-				$item_replace['url']=$start.$item['url'].'/';
-			}
-			if($level<$deep){
-				// _print_r($_SERVER['REQUEST_URI'],$item_replace['url'],mb_strpos($_SERVER['REQUEST_URI'],$item_replace['url']));
-				if(mb_strpos($_SERVER['REQUEST_URI'],$item_replace['url'])===0){
-					$item_replace['children']=$this->getDeepRec($item['id'],$item_replace['url'],$deep,$level+1);
+	function getDeepRec($id,$start,$deep,$type,$level=1){
+		$result=array();
+		$children=$this->getChildren($id);
+		foreach($children as $item){
+			if( $item['menu_on']=='yes' ){
+				$result_item=array(
+					'title'=>defvar($item['title'],$item['alternative']),
+				);
+				if(mb_strpos($item['url'],'://')>0){
+					$result_item['http_link']=true;
+				}else{
+					$result_item['url']=$start.$item['url'].'/';
 				}
+				if($level<$deep){
+					// _print_r($_SERVER['REQUEST_URI'],$result_item['url'],mb_strpos($_SERVER['REQUEST_URI'],$result_item['url']));
+					if($type=='all' || mb_strpos($_SERVER['REQUEST_URI'],$result_item['url'])===0){
+						$result_item['children']=$this->getDeepRec($item['id'],$result_item['url'],$deep,$type,$level+1);
+					}
+				}
+				$result[]=$result_item;
 			}
-			$result[$key]=$item_replace;
 		}
 		return $result;
 	}
 
 	function sitemap(){
-		$tree=$this->_getRecSiteMap($this->getStructureRootId());
+		$tree=$this->_getRecSiteMap( DOMAIN_ID );
 		$tree=$this->_getRecSiteMapHTML($tree);
 		smartas('tree',$tree);
 	}

@@ -20,7 +20,7 @@ class _Models extends Model{
 	function init_fields(){
 		$this->txt_name=new CharField(array('Русское название модели'));
 		$this->name=new CharField(array('Наименование класса модели','help_text'=>'маленькие латинские буквы','unique'=>true));
-		$this->icon=new ImageField(array('Иконка','blank'=>true,'path'=>'/admin/fw/media/img/','sizes'=>'16/','match'=>'/\.gif$/i'));
+		$this->icon=new ImageField(array('Иконка','blank'=>true,'path'=>'/admin/fw/media/img/','sizes'=>'16/','match'=>'/\.(gif|png)$/i'));
 		$this->ordering=new OrderField(array('ordering'));
 	}
 

@@ -1,24 +1,16 @@
 {if count($gradusnik)>0}
-	{foreach from=$gradusnik item="item" name="sfgd"}
-		{if $item.url=='/map/battle/' || $item.url=='/map/memorial/' || $item.url=='/map/search/'}
-			{assign var="back_url" value="/map/"}
-		{else}
-			{if $smarty.foreach.sfgd.iteration < count($gradusnik)}
-				<a href="{$item.url}">{$item.txt}</a>
-				<span class="div">|</span>
-			{else}
-				<b>{$item.txt}</b>
-			{/if}
-		
-			{if $smarty.foreach.sfgd.iteration + 1 == count($gradusnik)}
-				{assign var="back_url" value=$item.url}
-			{/if}
-		{/if}
-	{/foreach}
-	
-	{if $smarty.const.DOMAIN=='ru'}
-		{assign var="t" value="Вернуться"}
-	{else}
-		{assign var="t" value="Back"}
-	{/if}
+	<nav id="gradusnik">
+		<h5>Навигация до текущей страницы</h5>
+		<p>
+			<small>
+				{foreach from=$gradusnik item="item" name="sfgd"}
+					{if $smarty.foreach.sfgd.iteration < count($gradusnik)}
+						<a href="{$item.url}">{$item.txt}</a> &mdash;
+					{else}
+						<b>{$item.txt}</b>
+					{/if}
+				{/foreach}
+			</small>
+		</p>
+	</nav>
 {/if}
