@@ -343,10 +343,12 @@ class Compressor{
 		$out=self::getOutCss(DEBUG);
 		self::$css_arr=array();
 
+		$result=array();
 		foreach($out as $file){
 			$path_with_filemtime=self::getRootFilePathWithMtime($file['file_root_path']);
-			echo self::getCssLink($path_with_filemtime, $file['media'], SITE_ENCODING, HTML_VERSION);
+			$result[]=self::getCssLink($path_with_filemtime, $file['media'], SITE_ENCODING, HTML_VERSION);
 		}
+		return implode("\r\n",$result);
 	}
 	
 	/**
@@ -361,10 +363,12 @@ class Compressor{
 		$out=self::getOutJs(DEBUG, SITE_ENCODING);
 		self::$js_arr=array();
 
+		$result=array();
 		foreach($out as $file){
 			$path_with_filemtime=self::getRootFilePathWithMtime($file['file_root_path']);
-			echo self::getJsLink($path_with_filemtime, $file['charset'], HTML_VERSION);
+			$result[]=self::getJsLink($path_with_filemtime, $file['charset'], HTML_VERSION);
 		}
+		return implode("\r\n",$result);
 	}
 
 	/**
