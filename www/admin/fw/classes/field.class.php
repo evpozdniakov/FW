@@ -180,7 +180,7 @@ class Field{
 		return $result;
 	}
 
-	function getFormFieldHTMLCommon($params_arr,$error_bool,$mode_string=''){
+	function getFormFieldHTMLCommon($params_arr,$error,$mode_string=''){
 		/*
 			возвращает HTML-код поля формы "в обертке" из тегов типа <p> или <td>
 			в зависимостри от $this->mode, кроме того, может вернуть массив 
@@ -188,19 +188,19 @@ class Field{
 			редактируемых в режиме "core"
 
 			$params_arr - массив значений всех свойств элемента модели
-			$error_bool - true если поле было не заполнено, или заполнено с ошибкой
+			$error - содержит тип ошибки если поле было не заполнено, или заполнено с ошибкой
 			$mode_string - editable|viewable - переопределение собственных значений поля
 		*/
 		$this->txt_name=e5c($this->txt_name);
 		$this->help_text=e5c($this->help_text);
 		//определяем тег или простое значение поля
-		if( (empty($mode_string) && $this->editable===true) or (!empty($mode_string) && $mode_string=='editable') ){
-			$input_tag_or_value=$this->getFieldTagOrViewTemplate($params_arr);
-		}elseif( (empty($mode_string) && $this->viewable===true) or (!empty($mode_string) && $mode_string=='viewable') ){
+		if( $this->editable===true || $mode_string==='editable' ){
+			$input_tag_or_value=$this->getFieldTagOrViewTemplate($params_arr,$error);
+		}elseif( $this->viewable===true || $mode_string==='viewable' ){
 			$input_tag_or_value=$this->getModelItemInitValueCommon($params_arr);
 		}
 		//определяем текст и класс ошибки 
-		$error_arr=$this->getFormFieldHTMLError($error_bool);
+		$error_arr=$this->getFormFieldHTMLError($error);
 		//определяем тег <th> заголовка колонки для core
 		$th=$this->getFormFieldHTMLth($error_arr);
 		//определяем обертку 
@@ -221,16 +221,26 @@ class Field{
 		*/
 	}
 
-	function getFieldTagOrViewTemplate($params_arr){
+	function getFieldTagOrViewTemplate($params_arr,$error){
 		//проверяем не переопределен ли стандартный шаблон
-		$view_template_file=sprintf('%s/%s/%s.viewtemplate.php', MODELS_DIR, $this->model_name, $this->db_column);
-		if(file_exists($view_template_file)){
-			//определяем значение, которое появится в поле формы
-			$inputValue=$params_arr[$this->db_column];
-			//подключаем файл со специальным шаблоном
-			$form_items=new FormItems();
-			include($view_template_file);
+		$view_template_file_common=sprintf('%s/%s/%s.viewtemplate.php', MODELS_DIR, $this->model_name, $this->db_column);
+		$view_template_file_admin=sprintf('%s/%s/%s.viewtemplate.admin.php', MODELS_DIR, $this->model_name, $this->db_column);
+		$view_template_file_client=sprintf('%s/%s/%s.viewtemplate.client.php', MODELS_DIR, $this->model_name, $this->db_column);
+		//определяем значение, которое появится в поле формы
+		$inputValue=$params_arr[$this->db_column];
+		//подключаем файл со специальным шаблоном
+		$form_items=new FormItems();
+		if( file_exists($view_template_file_common) ){
+			include($view_template_file_common);
+		}elseif( EDIT_MODE===true && file_exists($view_template_file_admin) ){
+			include($view_template_file_admin);
+		}elseif( EDIT_MODE!==true && file_exists($view_template_file_client) ){
+			include($view_template_file_client);
 		}else{
+			// сбрасываем значения, которые были определены для подключаемых шаблонов
+			unset($inputValue);
+			unset($form_items);
+			// подключаем стандартное отображение
 			$model_obj=gmo($this->model_name);
 			$viewtemplate_method=$this->db_column.'Viewtemplate';
 			if( method_exists($model_obj, $viewtemplate_method) ){
@@ -257,19 +267,19 @@ class Field{
 		return $result;
 	}
 
-	function getFormFieldHTMLError($error_bool){
+	function getFormFieldHTMLError($error){
 		/*
 			возвращает массив с классом и текстом ошибки
 
-			$error_bool - true если поле было не заполнено, или заполнено с ошибкой
+			$error - содержит тип ошибки если поле было не заполнено, или заполнено с ошибкой
 		*/
 		$result=array();
-		if($error_bool===true){
-			//никакое сообщение пользователю не выводим,
-			//потому что не придумал пока какое будет сообщение
-			//и нужно ли оно вооообще
-			//вместо сообщения у поля формы должна появиться ярко-красная рамка 
-			//или что-то в этом роде
+		if( !empty($error) ){
+			// никакое сообщение пользователю не выводим,
+			// потому что не придумал пока какое будет сообщение
+			// и нужно ли оно вооообще
+			// вместо сообщения у поля формы должна появиться ярко-красная рамка 
+			// или что-то в этом роде
 			$message='';
 			$class='error';
 			$result=array('class'=>'error','message'=>'');
@@ -504,11 +514,11 @@ class Field{
 				}
 			}
 		}else{
-			_print_r('here field.class.php');
-			_print_r('$db_column_info',$db_column_info);
-			_print_r('$typelength',$typelength);
-			_print_r('null',$null);
-			_print_r(($db_column_info['Field']==$this->db_column),($db_column_info['Type']==$typelength),($db_column_info['Null']==$null));
+			// _print_r('here field.class.php');
+			// _print_r('$db_column_info',$db_column_info);
+			// _print_r('$typelength',$typelength);
+			// _print_r('null',$null);
+			// _print_r(($db_column_info['Field']==$this->db_column),($db_column_info['Type']==$typelength),($db_column_info['Null']==$null));
 		}
 		if(!$result && p2v('action')=='synchro'){
 			_print_r('Default='.$db_column_info['Default'],'$this->default='.$this->default);
