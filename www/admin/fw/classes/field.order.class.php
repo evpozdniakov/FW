@@ -216,7 +216,7 @@ class OrderField extends Field {
 			$fieldrels=explode(',',$this->fieldrel);
 			foreach($fieldrels as $fieldrel){
 				$fieldrel=trim($fieldrel);
-				$filter.=e5csql(' and `'.$this->model_name.'`.`'.$fieldrel.'`=?',$model_item_init_values[$fieldrel]);
+				$filter.=e5csql(' and `'.$this->model_name.'`.`'.$fieldrel.'`=?',defvar('',$model_item_init_values[$fieldrel]));
 			}
 		}
 		return $filter;
