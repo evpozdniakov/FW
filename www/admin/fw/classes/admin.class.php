@@ -330,6 +330,7 @@ class Admin{
 		$login=$_POST['login'];
 		$password=$_POST['password'];
 		$dbq=new DBQ('select id, name, login, su, domain, multidomain from _users where login=? and hash=@(?)',$login,CRYPT_METHOD,$password);
+		// _log('$dbq',$dbq);
 		if($dbq->rows>1){
 			_echo('в БД несколько пользователей с одинаковым именем');
 			_print_r($dbq->items);
@@ -361,7 +362,7 @@ class Admin{
 		if(!empty($_SESSION['admin_user'])){
 			$this->fixAccess();
 		}
-		hexit('Location: '.DOMAIN_PATH.'/admin/'.p2v('uri'));
+		hexit( sprintf('Location: %s/admin/%s', DOMAIN_PATH, p2v('uri')) );
 	}
 
 	function fixAccess(){
