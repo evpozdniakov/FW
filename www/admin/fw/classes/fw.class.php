@@ -519,8 +519,8 @@ class FW{
 	}
 	
 	public static function getDomainIdValue($use_db, $use_multidomains, $domain){
-		$domain_id=0;
-		$domain='';
+		$result_domain_id=0;
+		$result_domain='';
 		if( $use_db===true ){
 			if( $use_multidomains===false ){
 				$dbq=new DBQ('select id, url from structure where parent=0 and url like "%"');
@@ -532,12 +532,12 @@ class FW{
 			}elseif( $dbq->rows > 1 ){
 				_die('в таблице structure есть лишние данные для домена "'.$domain.'"');
 			}else{
-				$domain=$dbq->line['url'];
-				$domain_id=$dbq->line['id'];
+				$result_domain=$dbq->line['url'];
+				$result_domain_id=$dbq->line['id'];
 			}
 		}
 		
-		return array($domain, $domain_id);
+		return array($result_domain, $result_domain_id);
 	}
 	
 	/**
