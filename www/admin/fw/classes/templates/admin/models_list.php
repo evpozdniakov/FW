@@ -2,8 +2,8 @@
 
 if( !empty($final_models_list) ){
 	foreach($final_models_list as $model_name=>$model_txt_name){
-		$gif=DOMAIN_PATH.'/admin/models/'.$model_name.'/icon.gif';
-		$png=DOMAIN_PATH.'/admin/models/'.$model_name.'/icon.png';
+		$gif='/admin/models/'.$model_name.'/icon.gif';
+		$png='/admin/models/'.$model_name.'/icon.png';
 		if( file_exists(SITE_DIR.$png) ){
 			$icon=sprintf('<span class="icon iconPNG" style="background-image: url(%s)">&nbsp;</span>', $png);
 		}elseif( file_exists(SITE_DIR.$gif) ){

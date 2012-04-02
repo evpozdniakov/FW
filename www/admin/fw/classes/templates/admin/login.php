@@ -1,9 +1,9 @@
 <?php
 
-$result='
-	<div style="position:absolute;left:50%;top:50%;width:1px;height:1px;">
+$result=sprintf('
+	<div style="position:absolute;left:50%%;top:50%%;width:1px;height:1px;">
 		<div style="position:absolute;top:-43px;left:-80px;margin:0 auto;text-align:center;" class="contentZone">
-			<form id="login" name="login" action="'.e5c(DOMAIN_PATH.$_SERVER['REDIRECT_URL']).'" method="post">
+			<form id="login" name="login" action="%s" method="post">
 				<div>
 					<input type="hidden" name="send" value="yes">
 					<input type="hidden" name="action" value="login">
@@ -20,4 +20,4 @@ $result='
 	$("body").css({background:"#fff"});
 	//-->
 	</script>
-';
+',e5c(DOMAIN_PATH.$_SERVER['REDIRECT_URL']));

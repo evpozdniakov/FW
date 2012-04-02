@@ -57,7 +57,10 @@ class FW{
 		// определяем DOMAIN_PATH
 		self::setDomainPath();
 		
-		// устанавливаем IS_FIRST
+		// определяем IS_ADMIN
+		self::setIsAdmin();
+		
+		// определяем IS_FIRST
 		self::setIsFirst();
 		
 		// стартуем сессию
@@ -335,7 +338,7 @@ class FW{
 	 * при использовании кэширования злоумышленники могут забить кэш, делая
 	 * запросы к одной и той же странице с разными get-парамтрами
 	 * чтобы этого избежать, нужно удалить get-параметры из $_SERVER['REQUEST_URI']
-	 * и запомнить его предыдущее значение
+	 * но запомнить его оригинальное значение
 	 */
 	public static function fixServerRequestUri(){
 		// очищаем $_SERVER['REQUEST_URI'] от тегов, которые могли
@@ -544,19 +547,37 @@ class FW{
 	 * метод устанавливает DOMAIN_PATH в случае когда USE_SUBDOMAINS==false
 	 */
 	public static function setDomainPath(){
-		$domain_path=self::getDomainPathValue(USE_MULTIDOMAINS, USE_SUBDOMAINS, DOMAIN);
+		$domain_path=self::getDomainPathValue(USE_MULTIDOMAINS, USE_SUBDOMAINS, DOMAIN, DEFAULT_DOMAIN, HIDE_DEFAULT_DOMAIN);
 		define('DOMAIN_PATH', $domain_path);
 	}
 	
 	/**
 	 * метод определяет константу DOMAIN_PATH
 	 */
-	public static function getDomainPathValue($use_multidomains, $use_subdomains, $domain){
+	public static function getDomainPathValue($use_multidomains, $use_subdomains, $domain, $default_domain, $hide_default_domain){
 		$domain_path='';
 		if( $use_multidomains===true && $use_subdomains===false ){
-			$domain_path=sprintf('/~%s~',$domain);
+			if( $domain!=$default_domain || $hide_default_domain!==true ){
+				$domain_path=sprintf('/~%s~',$domain);
+			}
 		}
 		return $domain_path;
+	}
+	
+	/**
+	 * метод устанавливает константу IS_ADMIN
+	 */
+	public static function setIsAdmin(){
+		$bool=self::getIsAdminBool(DOMAIN_PATH, $_SERVER['REQUEST_URI']);
+		define('IS_ADMIN', $bool);
+	}
+	
+	/**
+	 * метод определяет значение для константы IS_ADMIN
+	 */
+	public static function getIsAdminBool($domain_path, $request_uri){
+		$bool = (mb_strpos($request_uri, $domain_path.'/admin/')===0);
+		return $bool;
 	}
 
 	/**
@@ -599,14 +620,14 @@ class FW{
 	 */
 	public static function startSession(){
 		// стартуем сессию
-		if(isset($GLOBALS['path'][1]) && $GLOBALS['path'][1]=='admin'){
+		if( IS_ADMIN===true ){
 			$name='FWSID';
 			$time=3600*24*30;
-			$path='/admin/';
+			$path=DOMAIN_PATH.'/admin/';
 		}else{
 			$name='PHPSESSID';
 			$time=60*18;
-			$path='/';
+			$path=DOMAIN_PATH.'/';
 		}
 		session_name($name);
 		session_set_cookie_params( $time, $path , '.'.removeSubdomain() );
@@ -654,7 +675,7 @@ class FW{
 			// подключаем Smarty и CLIENTSIDE.CLASS.PHP
 			// для клиент-зоны или для отладки БД
 			$include_clientside=true;
-			if( isset($GLOBALS['path'][1]) && $GLOBALS['path'][1]=='admin' ){
+			if( IS_ADMIN===true ){
 				if( DEBUG===false || DEBUG_DB===false ){
 					$include_clientside=false;
 				}
@@ -757,13 +778,13 @@ class FW{
 	 * для админ-зоны будет запущен Admin::autopage()
 	 */
 	public static function getRunFinalHandler(){
-		if( !isset($GLOBALS['path'][1]) || $GLOBALS['path'][1]!='admin' ){
+		if( IS_ADMIN===true ){
+			// запускаем метод ->autopage() объекта Admin
+			$GLOBALS['obj_admin']->autopage();
+		}else{
 			$GLOBALS['obj_client']=new ClientSide();
 			$GLOBALS['obj_client']->init();
 			$GLOBALS['obj_client']->runTemplate();
-		}else{
-			// запускаем метод ->autopage() объекта Admin
-			$GLOBALS['obj_admin']->autopage();
 		}
 	}
 }

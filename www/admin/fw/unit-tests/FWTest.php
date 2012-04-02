@@ -247,29 +247,71 @@ class FWTest extends PHPUnit_Framework_TestCase {
 		);
 	}
 	
-	/**
-	 * @test
-	 */
-	public function setDomainId(){
-		FW::setDomainId();
-		$this->assertTrue(defined('DOMAIN'), 'DOMAIN is defined');
-		$this->assertTrue(defined('DOMAIN_ID'), 'DOMAIN_ID is defined');
-	}
+	// /**
+	//  * @test
+	//  * @dataProvider getDomainIdValueProvider
+	//  */
+	// public function getDomainIdValue(){
+	// 	$domain_id=FW::getDomainIdValue();
+	// 	$this->assertTrue(defined('DOMAIN'), 'DOMAIN is defined');
+	// 	$this->assertTrue(defined('DOMAIN_ID'), 'DOMAIN_ID is defined');
+	// }
+	// 
+	// public function getDomainIdValueProvider(){}
 	
 	/**
 	 * @test
 	 * @dataProvider getDomainPathValueProvider
 	 */
-	public function getDomainPathValue($use_multidomains, $use_subdomains, $domain, $result){
-		FW::getDomainPathValue($use_multidomains, $use_subdomains, $domain);
+	public function getDomainPathValue($use_multidomains, $use_subdomains, $domain, $default_domain, $hide_default_domain, $result){
+		$domain_path=FW::getDomainPathValue($use_multidomains, $use_subdomains, $domain, $default_domain, $hide_default_domain);
+		$this->assertEquals($result, $domain_path, 'DOMAIN_PATH set correctly');
 	}
 	
 	public function getDomainPathValueProvider(){
 		return array(
-			array(true, true, 'msk', ''),
-			array(true, false, 'msk', '/~msk~'),
-			array(false, true, 'msk', ''),
-			array(false, false, 'msk', ''),
+			array(true, true, 'msk', 'msk', true, ''),
+			array(true, true, 'msk', 'msk', false, ''),
+			array(true, true, 'msk', 'spb', true, ''),
+			array(true, true, 'msk', 'spb', false, ''),
+
+			array(true, false, 'msk', 'msk', true, ''),
+			array(true, false, 'msk', 'msk', false, '/~msk~'),
+			array(true, false, 'msk', 'spb', true, '/~msk~'),
+			array(true, false, 'msk', 'spb', false, '/~msk~'),
+
+			array(false, true, 'msk', 'msk', true, ''),
+			array(false, true, 'msk', 'msk', false, ''),
+			array(false, true, 'msk', 'spb', true, ''),
+			array(false, true, 'msk', 'spb', false, ''),
+
+			array(false, false, 'msk', 'msk', true, ''),
+			array(false, false, 'msk', 'msk', false, ''),
+			array(false, false, 'msk', 'spb', true, ''),
+			array(false, false, 'msk', 'spb', false, ''),
+		);
+	}
+	
+	/**
+	 * @test
+	 * @dataProvider getIsAdminBoolProvider
+	 */
+	public function getIsAdminBool($domain_path, $request_uri, $result){
+		$is_admin=FW::getIsAdminBool($domain_path, $request_uri);
+		$this->assertEquals($result, $is_admin, 'IS_ADMIN is correct');
+	}
+	
+	public function getIsAdminBoolProvider(){
+		// domain_path, request_uri, result
+		return array(
+			array('', '/test/', false),
+			array('', '/test/admin/', false),
+			array('', '/admin/', true),
+			array('', '/admin/test/', true),
+			array('/~su~', '/~su~/admin/', true),
+			array('/~su~', '/~su~/admin/test/', true),
+			array('/~su~', '/~su~/test/admin/', false),
+			array('/~su~', '/~su~/test/', false),
 		);
 	}
 	

@@ -1,6 +1,6 @@
 <?php
 
-if($GLOBALS['path'][1]=='admin'){
+if( IS_ADMIN===true ){
 	$result='';
 }else{
 	$form_items=new FormItems();

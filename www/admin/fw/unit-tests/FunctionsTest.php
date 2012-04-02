@@ -117,8 +117,8 @@ class FunctionsTest extends PHPUnit_Framework_TestCase {
 		$tests[]=array(DOMAIN_ID, DOMAIN_ID, '/');
 		$dbq=new DBQ('select id, url from structure where parent=?',DOMAIN_ID);
 		foreach($dbq->items as $item){
-			$tests[]=array($item['id'], '', "/{$item['url']}/");
-			$tests[]=array($item['id'], DOMAIN_ID, "/{$item['url']}/");
+			$tests[]=array($item['id'], '', DOMAIN_PATH."/{$item['url']}/");
+			$tests[]=array($item['id'], DOMAIN_ID, DOMAIN_PATH."/{$item['url']}/");
 		}
 		return $tests;
 	}
