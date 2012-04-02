@@ -4,6 +4,4 @@ if(mb_strpos($props,'class')===false){
 	$class='class="buttonFormItem"';
 }
 
-$result='<input type="button" name="'.$name.'" value="'.$value.'" '.$props.'>';
-
-
+$result="<button {$props} type=\"button\" name=\"{$name}\" value=\"{$value}\"><span class=\"icon\"></span>{$value}</button>";

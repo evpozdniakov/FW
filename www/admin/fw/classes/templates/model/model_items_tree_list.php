@@ -12,11 +12,11 @@ if(IS_AJAX){
 }else{
 	$result='
 		<script type="text/javascript">
-			$.evCSSrule("#modelItems","display:none;");
+			$.evCSSrule("#modelItemsList div.modelItems","display:none;");
 		</script>
 		<div class="offset">
 			'.$this->getModelItemsFilter().'
-			<div id="modelItems">
+			<div class="modelItems">
 				'.$local->getRecModelItemsTree($models_elements_tree).'
 			</div>
 		</div>
@@ -48,9 +48,9 @@ class ModelItemsTreeListHTML{
 	}
 
 	function getLink($item){
-		$type=is_array($item['type'])?$item['type']['element']:$item['type'];
-		$url=is_array($item['url'])?$item['url']['element']:$item['url'];
-		$class='class="li '.(isset($item['attr'])?$item['attr']:'').'"';
+		$type = is_array($item['type']) ? $item['type']['element'] : $item['type'];
+		$url = is_array($item['url']) ? $item['url']['element'] : $item['url'];
+		$class=sprintf('class="text %s"', defvar('',$item['attr']));
 
 		if($type=='element_current'){
 			$link='<span '.$class.'><b>'.$item['title'].'</b></span>';
@@ -59,10 +59,10 @@ class ModelItemsTreeListHTML{
 			$link='<span '.$class.'><a href="'.DOMAIN_PATH.$url.'">'.$item['title'].'</a></span>';
 
 		}elseif($item['type']=='folder_empty'){
-			$link='<span class="empty">'.$item['title'].'</span>';
+			$link='<span class="text empty">'.$item['title'].'</span>';
 
 		}else{
-			$link='<span class="li">'.$item['title'].'</span>';
+			$link='<span class="text">'.$item['title'].'</span>';
 		}
 
 		return $link;
@@ -74,24 +74,26 @@ class ModelItemsTreeListHTML{
 		$url=is_array($item['url'])?$item['url']['folder']:$item['url'];
 		if($type=='folder_closed' || $type=='folder_opened'){
 			$href=DOMAIN_PATH.$url;
-			if($type=='folder_closed'){//закрытая папка [+]
+			if($type=='folder_closed'){
+				// закрытая папка [+]
 				$cls='plus';
-				$plus_minus='+';
-			}else{//открытая папка [-]
+				$symbol='+';
+			}elseif($type=='folder_opened'){
+				// открытая папка [-]
 				$cls='minus';
-				$plus_minus='-';
+				$symbol='-';
 			}
 			$block='
-				<div class="children">
-					<div class="nobullet">
-						<a class="'.$cls.'" href="'.$href.'"><span>'.$plus_minus.'</span></a>
-						'.$link_code.'
-					</div>
-					'.$children_code.'
+				<div class="icon text">
+					<i class="icon '.$cls.'" href="'.$href.'"><span>'.$symbol.'</span></i>
+					'.$link_code.'
 				</div>
+				'.$children_code.'
 			';
+		}elseif($type=='folder_empty'){
+			$block='<i href="#" class="icon empty"></i> '.$link_code;
 		}else{
-			$block=$link_code;
+			$block='<i href="#" class="icon bullet"></i> '.$link_code;
 		}
 		$type=is_array($item['type'])?$item['type']['element']:$item['type'];
 		if($type=='element' || $type=='element_current'){

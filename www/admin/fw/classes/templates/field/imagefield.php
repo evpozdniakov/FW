@@ -22,7 +22,7 @@ if( !empty($inputValue['uri']) ){
 		if( !defined('USE_SHADOWBOX') ){
 			define('USE_SHADOWBOX',true);
 		}
-		$image__flashbox='<a href="'.DOMAIN_PATH.$inputValue['uri'].'" rel="shadowbox"><img src="'.$inputValue['uri'].'" width="'.$width.'" style="border:2px solid #F98315;" alt=""><br></a>';
+		$image__flashbox='<a href="'.DOMAIN_PATH.$inputValue['uri'].'" rel="shadowbox"><img src="'.$inputValue['uri'].'" width="'.$width.'"  alt=""><br></a>';
 		$flash_init_script='';
 	}
 	$file_info_html='

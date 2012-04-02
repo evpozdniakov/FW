@@ -265,9 +265,10 @@ $.fn.extend({
 		return this;
 	},
 	evSboxDecorate: function(hash){
+		// hash: style skipFirst submitForm delay scroll maxHeight destroy redraw
 		this.each(function(j){
 			hash=(hash || {})
-			var hash_options_str='style:true skipFirst:false submitForm:false delay:false scroll:true destroy:false maxHeight:999px';
+			var hash_options_str='style:true skipFirst:false submitForm:false delay:false scroll:true maxHeight:999 destroy:false redraw:false';
 			for(var i=0; i<hash_options_str.split(' ').length; i++){
 				var key__value=hash_options_str.split(' ')[i];
 				var key=key__value.split(':')[0];
@@ -281,13 +282,16 @@ $.fn.extend({
 			}
 			var $select=$(this);
 			if($select.is('select')){
-				if(hash.destroy){
+				if( hash.destroy ){
 					var $wrap=$select.parent();
 					$select.insertAfter($wrap).show();
 					$wrap.remove();
 					return;
+				}else if( hash.redraw ){
+					$select.evSboxDecorate( $select.data('initialHash') );
+					return;
 				}
-				$select.hide();
+				$select.data({initialHash:hash}).hide();
 				var sbox_name=($select.attr('name') || '');
 				if($select.parent().is('span.sboxDecorated')){
 					var $wrap=$select.parent();
@@ -295,9 +299,12 @@ $.fn.extend({
 					$wrap.children('b.first, a.darr, span.options').remove();
 				}else{
 					var $wrap=$select.wrap($(document.createElement('span')).addClass('sboxDecorated')).parent();
-					if(hash.style){
+					if( hash.style ){
 						$wrap.css({position:'relative', display:'block'});
 					}
+					$select.bind('change', function(){
+						$select.evSboxDecorate({redraw:true});
+					});
 				}
 				var $opts_scroll=$(document.createElement('span')).addClass('scroll');
 				var selected=$select[0].selectedIndex;
@@ -322,7 +329,7 @@ $.fn.extend({
 							}
 						}
 						$select.trigger('change');
-						if(hash.submitForm){
+						if( hash.submitForm ){
 							$select.parents('form').eq(0).submit();
 						}
 					}
@@ -359,11 +366,11 @@ $.fn.extend({
 					var $span_options=$(document.createElement('span')).addClass('options').appendTo($wrap);
 					$opts_scroll.appendTo($(document.createElement('span')).addClass('ofh').appendTo($span_options));
 					// right there we add scrolling arrows
-					if(hash.scroll){
+					if( hash.scroll ){
 						$(document.createElement('span')).addClass('scrollArr scrollArrUp').appendTo($span_options);
 						$(document.createElement('span')).addClass('scrollArr scrollArrDw').appendTo($span_options);
 					}
-					if(hash.style){
+					if( hash.style ){
 						$.evCSSrule('span.sboxDecorated a.darr','height: '+wrap_wh[1]+'px;width: '+wrap_wh[0]+'px;');
 						$.evCSSrule('span.sboxDecorated span.options','top: '+wrap_wh[1]+'px;');
 					}
@@ -386,7 +393,7 @@ $.fn.extend({
 							}
 							// how much space is available under selectbox
 							var darr_coords=$.evElementCoords(this);
-							if(hash.scroll){
+							if( hash.scroll ){
 								var space_height=$.evScreenHeight()+$.evScrollTop() - (darr_coords.top+darr_coords.height);
 								// space before the bottom of the dropdown list end the browser window
 								space_height-=darr_coords.height/2;
@@ -482,7 +489,7 @@ $.fn.extend({
 							}
 						})
 					}
-					if(hash.style){
+					if( hash.style ){
 						evSboxDecorate_style_function=function(){
 							if(typeof window['evSboxDecorate_css_rules']=='undefined'){
 								window['evSboxDecorate_css_rules']=true;
@@ -521,7 +528,7 @@ $.fn.extend({
 					}
 				}
 				var index=window.evSboxDecorateDelayArr.length-1;
-				if(hash.delay){
+				if( hash.delay ){
 					var hash_str=[];
 					for(var key in hash){
 						hash_str.push(key+':'+hash[key].toString());

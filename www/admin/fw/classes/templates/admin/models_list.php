@@ -12,21 +12,16 @@ if( !empty($final_models_list) ){
 			$icon='<span class="icon">&nbsp;</span>';
 		}
 		$attr='href="'.DOMAIN_PATH.'/admin/'.$model_name.'/"';
-		$result.='
-			<li>
-					'
-					.ulba(
-						DOMAIN_PATH.'/admin/'.$model_name.'/',
-						'<strong>'.$icon.'<a '.$attr.'>'.$model_txt_name.'</a></strong>',
-						'<strong class="active">'.$icon.'<b>'.$model_txt_name.'</b></strong>',
-						'<strong class="active">'.$icon.'<a '.$attr.'><b>'.$model_txt_name.'</b></a></strong>'
-					).'
-			</li>
-		';
+		$result.=ulba(
+			DOMAIN_PATH.'/admin/'.$model_name.'/',
+			'<li>'.$icon.'<a '.$attr.'>'.$model_txt_name.'</a></li>',
+			'<li class="active">'.$icon.'<b>'.$model_txt_name.'</b></li>',
+			'<li class="active">'.$icon.'<a '.$attr.'><b>'.$model_txt_name.'</b></a></li>'
+		);
 	}
 }
 if($_SESSION['admin_user']['su']){
-	$result.='<li><strong><a href="'.DOMAIN_PATH.'/admin/synchro/">synchro</a></strong></li>';
+	$result.='<li><a href="'.DOMAIN_PATH.'/admin/synchro/">synchro</a></li>';
 }
-$result.='<li><strong><a href="'.DOMAIN_PATH.'/admin/logout.html">logout</a></strong></li>';
+$result.='<li><a href="'.DOMAIN_PATH.'/admin/logout.html">logout</a></li>';
 $result='<ul>'.$result.'</ul>';

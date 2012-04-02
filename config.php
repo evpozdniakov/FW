@@ -13,19 +13,19 @@ define('SITE_ENCODING', 'UTF-8');
 /*субдомены*/
 // будет ли контент сайта распределятся по доменам
 // если false, то все остальные опции — USE_SUBDOMAINS DOMAINS_LIST DEFAULT_DOMAIN HIDE_DEFAULT_DOMAIN — не имеют значения
-define('USE_MULTIDOMAINS', false);
+define('USE_MULTIDOMAINS', true);
 // настроен ли сервер на использование субдоменов
 // если нет, то многодоменность будет достигнута с помощью префиксов 
 // в пути к страницам сайта, вида ~domain~, например http://mysite.com/~msk~/
-define('USE_SUBDOMAINS', true);
+define('USE_SUBDOMAINS', false);
 // список используемых субдоменов (через пробел)
 // например, если будут использоваться www.site.ru и sale.site.ru
 // то нужно указать 'www sale'
-define('DOMAINS_LIST', 'msk spb');
+define('DOMAINS_LIST', 'ru su');
 // основной субдомен (субдомен по-умолчанию)
 // на него будет происходить редирект если адрес сайта набрали без субдомена
 // site.ru -> www.site.ru
-define('DEFAULT_DOMAIN', 'msk');
+define('DEFAULT_DOMAIN', 'ru');
 // следует ли скрывать основной субдомен
 // чтобы избежать редиректа на основной субдомен при запросе сайта без субдомена
 // но в этом случае будет происходить редирект 

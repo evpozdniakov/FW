@@ -1,9 +1,4 @@
 <?php
 
-if(mb_strpos($props,'class')===false){
-	$class='class="formItemSbmt"';
-}
-
-$result='<input type="submit" name="'.$name.'" value="'.$value.'" '.$props.' '.$class.'>';
-
-
+$icon = (mb_strpos($props,'icon')===false) ? '' : '<span class="icon"></span>';
+$result="<button {$props} type=\"submit\" name=\"{$name}\" value=\"{$value}\">{$icon}{$value}</button>";

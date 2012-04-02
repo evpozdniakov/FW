@@ -1,7 +1,7 @@
 <?php
 
 if($this->userCanAddModelItems()){
-	$add_link='<a id="addNewModelElementLink" href="'.DOMAIN_PATH.'/admin/'.$this->__name__.'/edit/">добавить</a>';
+	$add_link='<a href="'.DOMAIN_PATH.'/admin/'.$this->__name__.'/edit/">добавить</a>';
 }
 
 $result='

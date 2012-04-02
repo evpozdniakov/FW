@@ -13,6 +13,8 @@ var A={
 		A.miez.init();
 		// model icons
 		A.icons.init();
+		// login
+		A.login.init();
 	},
 	style: function(){
 		// layout
@@ -25,41 +27,43 @@ var A={
 			$('html').css({position:'static',width: '100%',height: '100%'})
 		}
 		// controls
-		if($('#controls').length){
-			var $admin_controls=$('#controls').wrap(
-				$(document.createElement('div')).attr({id:'adminControls'})
-			).parent();
-			if($.evIE6()){
-				$admin_controls.evPositionFixed({attach:'lb'});
-			}
+		var $controls=$('#controls');
+		if( $controls.length ){
+			$controls.wrap('<div id="adminControls"/>');
+			$('#adminControls').prepend('<div class="border"></div>');
+			// if($.evIE6()){ $admin_controls.evPositionFixed({attach:'lb'}) }
 		}
-		var $model_items=$('#modelItems');
+		// show items
+		var $model_items=$('#modelItemsList div.modelItems');
 		if($model_items.length){
 			$model_items.show();
 		}
 	},
 	tf: {
 		init: function(){
-			$('#typeFilterForm').ajaxForm({
+			var $form=$('#typeFilterForm');
+			$form.ajaxForm({
 				beforeSubmit: function(){$('#ajaxLoader').show()},
 				method: 'post',
 				dataType: 'json',
 				success: function(json){
-					$('#modelItems').empty().append(json.html);
+					$('#modelItemsList div.modelItems').empty().append(json.html);
 					$('#ajaxLoader').hide();
-					if(json.tf){
-						A.tf.decor();
-					}
+					A.tf.decorate($form);
 				}
+			});
+			$form.find('a.reset').bind('click',function(evt){
+				evt.preventDefault();
+				$form.find('input').val('');
+				$form.submit();
 			})
-			A.tf.decor();
 		},
-		decor: function(){
-			if($('#typeFilterForm input')[0] && $('#typeFilterForm input')[0].value){
-				$('#typeFilterForm a.reset').show().bind('click',function(event){
-					event.preventDefault();
-					$(this).hide().next().attr({value:''}).css({border:''}).parent().trigger('submit');
-				}).next().css({border: '2px solid #F98315'});
+		decorate: function($form){
+			if( $form.find('input').val() ){
+				$form.addClass('decorated');
+			}else{
+				$form.removeClass('decorated');
+				A.mil.init();
 			}
 		}
 	},
@@ -69,10 +73,10 @@ var A={
 		},
 		bindPlusMinusClick: function($parent){
 			if(!$parent){
-				$parent=$('#modelItems');
+				$parent=$('#modelItemsList div.modelItems');
 			}
 			if ($parent.length) {
-				$parent.find('a.plus, a.minus').each(function(){
+				$parent.find('i.icon').each(function(){
 					$(this).bind('click',function(event){
 						event.preventDefault();
 						A.mil.getToggleChildren($(this));
@@ -133,11 +137,11 @@ var A={
 			try{
 				//находим ссылку a.plus выше или ниже текущей
 				$parent_li=$current_element_node.parent().parent().parent();
-				$a_plus=((action=='up')?$parent_li.prev():$parent_li.next()).find('div.children div.nobullet a.plus');
+				$a_plus=((action=='up')?$parent_li.prev():$parent_li.next()).find('div.icon.text a.plus');
 				//если такая нашлась
 				if($a_plus.length){
 					//сворачиваем текущую страницу
-					var $a_minus=$parent_li.find('div.children div.nobullet a.minus');
+					var $a_minus=$parent_li.find('div.icon.text i.icon.minus');
 					if($a_minus.length){
 						var $children=A.mil.getChildren($a_minus);
 						A.mil.toggleChildren($a_minus,$children);
@@ -187,7 +191,7 @@ var A={
 					$children.show('fast');
 				}
 			}else{
-				$children.slideToggle('fast');
+				$children[ $.evIE('slideToggle') ]('fast');
 			}
 		}
 	},
@@ -250,7 +254,7 @@ var A={
 					return false;
 				}
 			})
-			$('#adminControls input[name=delete_btn]')[show__hide]();
+			$('#adminControls input[name=delete]')[show__hide]();
 		},
 		MTMfieldTakeAll: function(manage_all){
 			//поле MTM реализовано так, что в форме может появляться либо селектбокс, либо чекбоксы
@@ -289,7 +293,7 @@ var A={
 						if(data && data.length){
 							// создаем скрытое поле
 							$('#model__models_form p.icon > span.tag').
-								append($(document.createElement('input')).attr({type:'hidden', name:'_models[icon_from_lib]'}));
+								append('<input type="hidden" name="_models[icon_from_lib]"/>');
 							// создаем диалог
 							A.icons.makeDialog(data);
 							// создаем ссылку
@@ -301,7 +305,7 @@ var A={
 			}
 		},
 		makeDialog: function(data){
-			var $div=$(document.createElement('div')).attr({id:'iconsDialogBox'}).appendTo('body');
+			var $div=$('<div id="iconsDialogBox"/>').appendTo('body');
 			for(var i=0; i<data.length; i++){
 				var src='http://fw.bumagi.net'+data[i].icon_uri;
 				$div.
@@ -328,8 +332,7 @@ var A={
 				// показываем выбранную иконку и ссылку на ее отмену
 				var $img=$(document.createElement('img')).attr({src:src, width:16, height:16}).
 					css({verticalAlign:'middle', marginRight:8, border:'2px solid #000'}).appendTo($span_tag);
-				$(document.createElement('a')).attr({href:'#'}).text('отменить').
-					appendTo($span_tag).bind('click', function(evt){
+				$('<a href="#">отменить</a>').appendTo($span_tag).bind('click', function(evt){
 						evt.preventDefault();
 						$img.remove();
 						$(this).remove();
@@ -347,7 +350,7 @@ var A={
 				// скрываем диалог
 				$div.dialog('close');
 			})
-			$div.append($(document.createElement('span')).addClass('clear'))
+			$div.append('<span class="clear"/>')
 			$div.dialog({
 				autoOpen: false,
 				modal: true,
@@ -355,10 +358,20 @@ var A={
 			})
 		},
 		makeLink: function(){
-			$('#model__models_form p.icon > span.tag').append($(document.createElement('a')).attr({id:'openIconDialog', href:'#'}).text('выбрать из библиотеки').bind('click',function(evt){
-				evt.preventDefault();
-				$('#iconsDialogBox').dialog('open');
-			}))
+			$('#model__models_form p.icon > span.tag').
+				append('<a id="openIconDialog" href="#">выбрать из библиотеки</a>').
+				bind('click',function(evt){
+					evt.preventDefault();
+					$('#iconsDialogBox').dialog('open');
+			})
+		}
+	},
+	login: {
+		init: function(){
+			var $login_form=$('#loginForm');
+			if( $login_form.length ){
+				$("#loginField")[0].focus();
+			}
 		}
 	}
 }

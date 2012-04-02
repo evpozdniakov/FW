@@ -106,15 +106,13 @@ class Admin{
 		$structure_items=ga(array(
 			'classname'=>'structure',
 			'domain'=>false,
-			'fields'=>'url',//список полей которые нужно вытащить через запятую 'id,name,body'
+			'fields'=>'title url',//список полей которые нужно вытащить через запятую 'id,name,body'
 			'extra'=>array('where'=>'parent=0'),//массив типа array('select'=>'id,body', 'where'=>'parent>?', 'params'=>$parent)
 			'order_by'=>'ordering',//строка типа или '-cdate' 'parent, +name', где необязательный "+" это asc, а "-" это desc
 			'_slice'=>'0',//строка 'n[,m]' возвращает массив элементов начиная с n (заканчивая m, если m передан)
 		));
 		if(count($structure_items)>1){
-			foreach($structure_items as $item){
-				$domains[]=$item['url'];
-			}
+			$domains=$structure_items;
 			//вызываем шаблон вывода списка моделей
 			include(FW_DIR.'/classes/templates/admin/domains_list.php');
 		}

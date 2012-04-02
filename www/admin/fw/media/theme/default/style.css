@@ -1,0 +1,87 @@
+body {background: #e8e8ea url(img/body.tail.png);}
+
+form.adminForm p span.title {display: block;padding-bottom: 4px;font: 13px/16px 'Arial', sans-serif;color: #444546;}
+form.adminForm p span.tag input[type="text"],
+form.adminForm p span.tag input[type="password"] {margin: 0;padding: 6px 11px;height: 15px;border-style: inset;border-width: 2px;font: 13px/15px 'Arial', sans-serif;color: #444546;}
+form.adminForm p span.tag *[disabled] {opacity: .5;}
+form.adminForm p button {margin: 0 5px;height: 26px;padding: 0 18px;border: 0;border-radius: 4px;background: linear-gradient(top, rgba(251,251,251,1), rgba(225,225,225,1));font: 11px 'Arial', sans-serif;color: #444546;}
+form.adminForm p button.icon {position: relative;padding-left: 34px;}
+form.adminForm p button.icon span.icon {position: absolute;left: 0;top: 0;display: block;width: 39px;height: 26px;background-repeat: no-repeat;background-position: center;}
+
+div.rb50 {position: absolute;bottom: 50%;right: 50%;width: 1px;height: 1px;}
+#loginForm {position: absolute;left: -150px;top: -120px;width: 300px;height: 240px;background-color: #fff;border: 1px solid #b5b5b5;border-radius: 4px;}
+#loginForm div.pad {padding: 20px 60px;}
+#loginForm div.pad p {margin-top: 1em;}
+#loginForm div.pad p:first-child {margin: 0;}
+#loginForm div.pad p span.tag input {width: 154px;}
+#loginForm div.pad p span.tag button {margin: 0;padding: 0;height: 34px;width: 178px;background: #9d0a0e;color: #fff;}
+
+#header {position: relative;height: 101px;background-color: #868686;}
+#logo {position: absolute;left: 0;top: 0;width: 436px;height: 101px;background-color: #9d0a0e;background-repeat: no-repeat;background-position: center;}
+#logo a {display: block;width: 436px;height: 101px;}
+#domainsList {position: absolute;left: 436px;bottom: 0;padding: 14px 23px;font: 11px/20px 'Arial', sans-serif;color: #fff;}
+#domainsList h1 {margin: 0;font: 18px/1em 'Arial', sans-serif;color: #fff;white-space: nowrap;}
+#domainsList p span {padding-right: 1em;}
+#domainsList p a {color: #fff;text-decoration: none;}
+
+#modelsList {float: left;padding: 20px 16px;width: 194px;margin-bottom: 76px;}
+#modelsList ul {margin: 0;padding: 0;list-style-type: none;border: 1px solid #b5b5b5;border-radius: 4px;background-color: #fff;font: 13px/16px 'Arial', sans-serif;color: #444546;}
+#modelsList ul li {position: relative;display: block;border-top: 1px solid #ececec;}
+#modelsList ul li:first-child {border: 0;}
+#modelsList ul li.active {margin: 0 -1px;}
+#modelsList ul li > * {display: block;padding: 10px 20px 10px 40px;}
+#modelsList ul li.active > * {background-color: #9d0a0e;}
+#modelsList ul li.active:first-child > * {border-radius: 4px 4px 0 0;}
+#modelsList ul li.active * {color: #fff;font-weight: 400;text-decoration: none;}
+#modelsList ul li a {color: #444546;text-decoration: none;}
+#modelsList ul li a:hover {background-color: #ececec;text-decoration: none;}
+#modelsList ul li.active a:hover {background-color: #9d0a0e;}
+#modelsList ul li b {font-weight: 400;}
+#modelsList ul li span.icon {position: absolute;left: 6px;top: 7px;display: block;opacity: .66;padding: 0;width: 29px;height: 19px;background-repeat: no-repeat;background-position: center;}
+
+#itemsListAndEditZone {float: left;margin: 20px 16px 76px 0;width: 822px;border: 1px solid #b5b5b5;border-radius: 4px;background: #fff url(img/itemslist.brd.png) repeat-y 198px 0;}
+
+#modelItemsList {float: left;padding: 16px;width: 178px;}
+#modelItemsList div.modelItems {margin-left: -6px;font: 13px/16px 'Arial', sans-serif;color: #444546;}
+#modelItemsList ul {margin: 0;padding: 0;list-style-type: none;}
+#modelItemsList ul li {zoom: 1;position: relative;margin: 0;padding: 0 0 0 16px;}
+/*#modelItemsList ul li div.icon.text {zoom: 1;}*/
+#modelItemsList ul li i.icon {position: absolute;left: -2px;top: 0;display: block;width: 23px;height: 23px;background-repeat: no-repeat;background-position: center;}
+#modelItemsList ul li i.icon span {display: none;}
+#modelItemsList ul li i.icon.plus {background-image: url(img/plus.icon.png);cursor: pointer;}
+#modelItemsList ul li i.icon.minus {background-image: url(img/minus.icon.png);cursor: pointer;}
+#modelItemsList ul li i.icon.empty {background: none;}
+#modelItemsList ul li i.icon.bullet {background-image: url(img/bullet.icon.png);}
+#modelItemsList ul li span.text.empty {opacity: .5;}
+#modelItemsList ul li span.text {display: block;padding: 5px 0 5px 7px;}
+#modelItemsList ul li span.text a {color: #444546;text-decoration: none;}
+#modelItemsList ul li span.text b {color: #9d0a0e;}
+
+#typeFilterForm {}
+#typeFilterForm div {position: relative;padding: 1px 0 15px;}
+#typeFilterForm div input {display: block;margin: 0;padding: 6px 11px;width: 150px;height: 15px;border-style: inset;border-width: 2px;font: 13px/15px 'Arial', sans-serif;color: #444546;}
+#typeFilterForm div a.reset {display: none;}
+#typeFilterForm.decorated div input {background: #ffe1e6;}
+#typeFilterForm.decorated div a.reset {position: absolute;top: 5px;right: 5px;display: block;width: 17px;height: 17px;background: url(img/reset.png) no-repeat center;} 
+
+#modelItemEditZone {float: left;padding: 16px 27px;width: 558px;min-height: 500px;}
+#modelItemEditZone h1 {color: #5c5c5c;font: 36px 'Arial', sans-serif;}
+#modelItemEditZone h1 a {padding-left: 20px;color: #9d0a0e;font: 13px 'Arial', sans-serif;text-transform: capitalize;}
+#modelItemEditZone form p {margin: 30px 0;font: 13px/16px 'Arial', sans-serif;color: #444546;}
+#modelItemEditZone form p a[rel="shadowbox"] img {border: 2px solid #9d0a0e;}
+#modelItemEditZone form p span.title {display: block;padding-bottom: 4px;}
+#modelItemEditZone form p span.title b {font-weight: 400;}
+#modelItemEditZone form p span.tag.sbox select {width: 100%;}
+#modelItemEditZone form p span.tag.text input,
+#modelItemEditZone form p span.tag.area textarea {margin: 0;padding: 6px 11px;width: 532px;border-style: inset;border-width: 2px;font: 13px/15px 'Arial', sans-serif;color: #444546;}
+#modelItemEditZone form p span.tag.text input {height: 15px;}
+#modelItemEditZone form p span.tag.area textarea {height: 70px;}
+
+#adminControls {position: fixed;z-index: 100;left: 0;bottom: 0;padding: 15px 0 14px;width: 100%;height: 26px;background-color: #868686;border-top: 1px solid #636363;}
+#adminControls div.border {position: absolute;left: 0;top: -7px;width: 100%;height: 6px;background: url(img/controls.brd.png) repeat-x 0 0;}
+#adminControls #controls,
+#adminControls p.untitled {margin: 0;text-align: center;}
+#adminControls p.untitled button.delete span.icon {background: url(img/trash.icon.png) no-repeat 11px 5px;}
+#adminControls p.untitled button.save span.icon {background-image: url(img/save.icon.png);}
+/*#adminControls #controls div.noTitle p input {margin: 0 5px;height: 26px;padding: 0 18px;border: 0;border-radius: 4px;background: linear-gradient(top, rgba(251,251,251,1), rgba(225,225,225,1));font: 11px 'Arial', sans-serif;color: #444546;}*/
+/*#adminControls #controls div.noTitle p input.deleteButton {border-color: #fff;}*/

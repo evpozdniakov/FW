@@ -3,17 +3,18 @@
 $num=0;
 foreach($domains as $domain){
 	$num++;
-	$u=sprintf('http://%s/admin/', getSiteUrl($domain));
-	$domain=strtoupper($domain);
+	$u=sprintf('http://%s/admin/', getSiteUrl($domain['url']));
+	$t=$domain['title'];
+	$cls = ($domain['url']==DOMAIN) ? 'active' : '';
 	$result.='
-		<strong>
+		<span class="'.$cls.'">
 			'.ulba(
 				$u,
-				'<a href="'.$u.'">'.$domain.'</a>',
-				'<b>'.$domain.'</b>',
-				'<a href="'.$u.'"><b>'.$domain.'</b></a>
+				'<a href="'.$u.'">'.$t.'</a>',
+				'<b>'.$t.'</b>',
+				'<a href="'.$u.'"><b>'.$t.'</b></a>
 			').'
-		</strong>
+		</span>
 	';
 }
-$result.='<div class="clear"></div>';
+

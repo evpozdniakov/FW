@@ -63,7 +63,7 @@ class _Cache extends Model{
 
 	function getModelNameHTML(){
 		// Добавляем ссылку на очистку кеша
-		return '<h1>'.$this->__txt_name__.'<a id="addNewModelElementLink" href="/admin/clear_cache/">очистить кеш</a></h1>';
+		return '<h1>'.$this->__txt_name__.'<a href="/admin/clear_cache/">очистить кеш</a></h1>';
 	}
 
 	function beforeDelete(){
