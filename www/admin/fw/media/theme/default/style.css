@@ -1,6 +1,7 @@
 body {background: #e8e8ea url(img/body.tail.png);}
 
-form.adminForm p span.title {display: block;padding-bottom: 4px;font: 13px/16px 'Arial', sans-serif;color: #444546;}
+form.adminForm p {font: 13px/16px 'Arial', sans-serif;color: #444546;}
+form.adminForm p span.title {display: block;padding-bottom: 4px;}
 form.adminForm p span.tag input[type="text"],
 form.adminForm p span.tag input[type="password"] {margin: 0;padding: 6px 11px;height: 15px;border-style: inset;border-width: 2px;font: 13px/15px 'Arial', sans-serif;color: #444546;}
 form.adminForm p span.tag *[disabled] {opacity: .5;}
@@ -67,9 +68,8 @@ div.rb50 {position: absolute;bottom: 50%;right: 50%;width: 1px;height: 1px;}
 #modelItemEditZone {float: left;padding: 16px 27px;width: 558px;min-height: 500px;}
 #modelItemEditZone h1 {color: #5c5c5c;font: 36px 'Arial', sans-serif;}
 #modelItemEditZone h1 a {padding-left: 20px;color: #9d0a0e;font: 13px 'Arial', sans-serif;text-transform: capitalize;}
-#modelItemEditZone form p {margin: 30px 0;font: 13px/16px 'Arial', sans-serif;color: #444546;}
+#modelItemEditZone form p {margin: 30px 0;}
 #modelItemEditZone form p a[rel="shadowbox"] img {border: 2px solid #9d0a0e;}
-#modelItemEditZone form p span.title {display: block;padding-bottom: 4px;}
 #modelItemEditZone form p span.title b {font-weight: 400;}
 #modelItemEditZone form p span.tag.sbox select {width: 100%;}
 #modelItemEditZone form p span.tag.text input,

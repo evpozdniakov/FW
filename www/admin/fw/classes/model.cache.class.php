@@ -3,8 +3,8 @@
  * Кеш
  * 
  * Кеш включается в config.php:
- * 		define('USE_CACHE',false);
- * 		define('CACHE_DIR','/home/www/__cache/');
+ * define('USE_CACHE', true);
+ * define('CACHE_DIR', $_SERVER['DOCUMENT_ROOT'].'/../fwcache');
  * 
  * Вывод кешированой страницы осуществляется функцией _tryUseCache() в init.php
  * При попадании в кеш выполнение скрипта прерывается
@@ -74,7 +74,9 @@ class _Cache extends Model{
 			,$cache_item['id']
 		);
 		//удаляем файл
-		if(file_exists(CACHE_DIR.$cache_item['f'])){unlink(CACHE_DIR.$cache_item['f']);}
+		if( file_exists(CACHE_DIR.'/'.$cache_item['f']) ){
+			unlink(CACHE_DIR.'/'.$cache_item['f']);
+		}
 	}
 
 	//=========================================================
@@ -114,11 +116,12 @@ class _Cache extends Model{
 		fileWrite(CACHE_DIR,$cache_file_name,$cache_file_content);
 
 		//сохраняем запись о файле в БД, чтобы была возможность выборочно удалить закэшированные файлы
-		$_cache_item=new _Cache(array(
+		$data=array(
 			'f'=>$cache_file_name,
 			'u'=>$cache_file_url,
 			'e'=>$expired,
-		));
+		);
+		$_cache_item=gmi('_cache',$data);
 		$errors=$_cache_item->save();
 		if(count($errors)){
 			_die($_cache_item->errReport($errors));
@@ -157,16 +160,17 @@ class _Cache extends Model{
 		//вычичляем время хранения файла, создаем содержимое и сохраняем файл
 		$cache_file_content=sprintf("%s\n%s", $view, trim($html));
 		$model_name=mb_substr($view,0,mb_strpos($view,'->'));
-		if( !file_exists(CACHE_DIR.$model_name) ){
-			mkdir(CACHE_DIR.$model_name,0777);
+		if( !is_dir(CACHE_DIR.'/'.$model_name) ){
+			mkdir(CACHE_DIR.'/'.$model_name,0777);
 		}
-		fileWrite(CACHE_DIR.$model_name.'/',$cache_file_name,$cache_file_content);
+		fileWrite(CACHE_DIR.'/'.$model_name,$cache_file_name,$cache_file_content);
 
 		//сохраняем запись о файле в БД, чтобы была возможность выборочно удалить закэшированные файлы
-		$_cache_item=new _Cache(array(
+		$data=array(
 			'f'=>$cache_file_name,
 			'v'=>$view,
-		));
+		);
+		$_cache_item=gmi('_cache',$data);
 		$errors=$_cache_item->save();
 		if(count($errors)){
 			_die($_cache_item->errReport($errors));
@@ -189,7 +193,7 @@ class _Cache extends Model{
 		$cache_file_name=_crypt($view);
 		//проверяем кеш на диске
 		$model_name=mb_substr($view,0,mb_strpos($view,'->'));
-		$cache_file_content=file2str(CACHE_DIR.$model_name.'/', $cache_file_name);
+		$cache_file_content=file2str(CACHE_DIR.'/'.$model_name, $cache_file_name);
 		if($cache_file_content){
 			$line_break_position=mb_strpos($cache_file_content,"\n");
 			$view=mb_substr($cache_file_content,0,$line_break_position);
@@ -262,22 +266,17 @@ class _Cache extends Model{
 		if(!$model_id){_die('не определился $model_id в _Cache->clearModelCachedPages() - СДЕЛАЙТЕ СИНХРОНИЗАЦИЮ, это должно помочь');}
 		//вытаскиваем id и имена файлов из таблицы _cache
 		$dbq=new DBQ('
-			select 
-				c.id
-			from
-				_cache__models_rel cmr,
-				_cache c
-			where
-				cmr._models_id_key2=?
-				and c.id=cmr._cache_id_key1
-			'
+			select c.id
+			from _cache__models_rel cmr, _cache c
+			where cmr._models_id_key2=? and c.id=cmr._cache_id_key1
+		'
 			,$model_id
 		);
-		if(is_array($dbq->items)){
+		if( is_array($dbq->items) ){
 			//удаляем файлы
 			foreach($dbq->items as $item){
 				//здесь нужно создать элементы и удалить их
-				$_cache_item=new _Cache($item['id']);
+				$_cache_item=gmi('_cache',$item['id']);
 				$_cache_item->delete();
 			}
 		}
@@ -285,22 +284,19 @@ class _Cache extends Model{
 
 	/**
 	* Чистим кеш полностью
-	* 
-	* должно было использоваться, но перенесено в fw/clear_cache.php - функция cache_clearAll()
-	* переделал - файл fw/clear_cache.php больше не нужен и очистка кэша происходит здесь evpozdniakov@211208
 	*/
 	function clearAll(){
 		//метод предназначен только для суперадмина
 		if($_SESSION['admin_user']['su']!='yes'){return;}
 
 		//проверяем на всякий случай правильно ли задан CACHE_DIR
-		if(!is_dir(CACHE_DIR)){_die('Константа CACHE_DIR ('.CACHE_DIR.') не указывает на каталог');}
+		if( !is_dir(CACHE_DIR) ){_die('Константа CACHE_DIR ('.CACHE_DIR.') не указывает на каталог');}
 
 		//проходим по каталогу CACHE_DIR и удаляем все файлы
-		if($dir_src=opendir(CACHE_DIR)){
-			while(($file_name=readdir($dir_src))!==false){
-				if(is_file(CACHE_DIR.$file_name)){
-					unlink(CACHE_DIR.$file_name);
+		if( $dir_src=opendir(CACHE_DIR) ){
+			while( ($file_name=readdir($dir_src))!==false ){
+				if( is_file(CACHE_DIR.'/'.$file_name) ){
+					unlink(CACHE_DIR.'/'.$file_name);
 				}
 			}
 			closedir($dir_src);

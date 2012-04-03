@@ -208,6 +208,13 @@ var A={
 					setTimeout('A.miez.toggleDeleteBtn()',100);
 				})
 			}
+			$('#controls button.delete').bind('click', function(evt){
+			    evt.preventDefault();
+			    if( confirm('Удалить безвозвратно?') ){
+			        $miez_form.find('input[name="delete"]').val(1);
+			        $miez_form[0].submit();
+			    }
+			})
 			if(typeof Shadowbox=='object'){
 				Shadowbox.init({
 					language: 'ru',
