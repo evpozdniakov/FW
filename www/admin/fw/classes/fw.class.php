@@ -622,15 +622,16 @@ class FW{
 		// стартуем сессию
 		if( IS_ADMIN===true ){
 			$name='FWSID';
-			$time=3600*24*30;
+			$seconds=3600;
 			$path=DOMAIN_PATH.'/admin/';
 		}else{
 			$name='PHPSESSID';
-			$time=60*18;
+			$seconds=60*18;
 			$path=DOMAIN_PATH.'/';
 		}
-		session_name($name);
-		session_set_cookie_params( $time, $path , '.'.removeSubdomain() );
+		ini_set('session.name',$name);
+		ini_set('session.cookie_path',$path);
+		ini_set('session.gc_maxlifetime',$seconds);
 		session_start();
 	}
 
