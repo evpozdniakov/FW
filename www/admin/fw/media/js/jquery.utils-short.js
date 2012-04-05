@@ -111,25 +111,119 @@ $.extend({
 			height: height
 		}
 	},
+	evValidateEmail: function(input_or_string){
+		//проверяем передана ли строка
+		if(typeof input_or_string=='string'){
+			var email=input_or_string;
+		}else{
+			//проверяем передан ли тег
+			if(typeof input_or_string.value=='string'){
+				var email=input_or_string.value;
+			}else{
+				//проверяем передан ли объект jQuery
+				if(typeof input_or_string[0].value=='string'){
+					var email=input_or_string[0].value;
+				}else{
+					return false;
+				}
+			}
+		}
+		return (email.search(/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/)==0);
+	},
+	evNewin: function(link){
+		if(link && link.href){
+			var newin=window.open(link.href);
+			return false;
+		}
+	},
 	evCSSrule: function(selector, style){
 		if( !document.styleSheets.length ){
 			$(document.createElement('style')).attr('text/css').appendTo('head');
 		}
 		var css_rule_text=selector + '{'+ style+ '}';
 		try{
-			var x=document.styleSheets[document.styleSheets.length-1];
+			var x=document.styleSheets[0];
 			if($.browser.msie){
 				x.addRule(selector, style);
 			}else{
 				x.insertRule(css_rule_text,x.cssRules.length);
 			}
 		}catch(e){
-			// alert('can\'t insert css rule:\n' + css_rule_text);
+			if( typeof console=='object' && typeof console.log=='function' ){
+				console.log('can\'t insert css rule:\n' + css_rule_text);
+			}
 		}
 	}
-})
+});
 
 $.fn.extend({
+	evDragDrop: function(hash){
+		this.each(function(){
+			//придумываем идентификатор объекту, чтобы отличать его от других
+			var $target=$(this);
+			var random_id='random_id_'+Math.random().toString().substr(2);
+			if(!window['C'])C={};
+			if(!C['__evDragDrop__'])C.__evDragDrop__=[];
+			C.__evDragDrop__[random_id]={};
+			// определяем функцию для вызоыва hash.callback
+			var callback_trigger_function=function(hash,evt,evt_name,lt){
+				if(hash.callback){
+					hash.callback({
+						event: evt,
+						$target: $target,
+						type: evt_name,
+						left: lt[0],
+						top: lt[1]
+					})
+				}
+			}
+			//реагируем на нажатие
+			$target.mousedown(function(evt){
+				evt.preventDefault();
+				C.__evDragDrop__[random_id].is_drag=true;
+				C.__evDragDrop__[random_id].delta_xy=[
+					evt.clientX - $target[0].offsetLeft,
+					evt.clientY - $target[0].offsetTop
+				];
+				// дергаем hash.callback
+				callback_trigger_function(hash,evt,'start',[$target[0].offsetLeft,$target[0].offsetTop]);
+			});
+			//реагируем на drag
+			$('body').mousemove(function(evt){
+				evt.preventDefault();
+				if(C.__evDragDrop__[random_id].is_drag){
+					var lt=[
+						evt.clientX - C.__evDragDrop__[random_id].delta_xy[0],
+						evt.clientY - C.__evDragDrop__[random_id].delta_xy[1],
+					];
+					//преобразуем новые координаты так, чтобы объект не вылезал за рамки
+					if(hash.left){
+						if(lt[0]<hash.left[0])lt[0]=hash.left[0];
+						if(lt[0]>hash.left[1])lt[0]=hash.left[1];
+					}
+					if(hash.top){
+						if(lt[1]<hash.top[0])lt[1]=hash.top[0];
+						if(lt[1]>hash.top[1])lt[1]=hash.top[1];
+					}
+					//позициорируем
+					$target.css({'left':lt[0],'top':lt[1]});
+					// дергаем hash.callback
+					callback_trigger_function(hash,evt,'drag',lt);
+				}
+			});
+			//реагируем на drop
+			$('body').mouseup(function(evt){//привязываем событие к document, потому что нам не важны координаты
+				evt.preventDefault();
+				if(C.__evDragDrop__[random_id].is_drag){
+					//если происходит перетаскивание, то заканчиваем его
+					C.__evDragDrop__[random_id].is_drag=false;
+					C.__evDragDrop__[random_id].delta_xy=null;
+					callback_trigger_function(hash,evt,'drop',[$target[0].offsetLeft,$target[0].offsetTop]);
+				}
+			});
+		})
+		return this;
+	},
 	evElementCoords: function(relative_elem){
 		var coords=$.evElementCoords(this[0]);
 		if(relative_elem){
@@ -264,6 +358,195 @@ $.fn.extend({
 		})
 		return this;
 	},
+	evGMapping: function(){
+		this.each(function(i){
+			var $element=$(this);
+			// создаем массив window.evGMapping_GMap2 со ссылками на карты
+			if(i==0 && typeof window['evGMapping_GMap2']=='undefined'){
+				window['evGMapping_GMap2']=[];
+			}
+			// параметры карты по атрибутам элемента
+			var gmap2_index=window.evGMapping_GMap2.length;
+			var lat__lng=($element.attr('data-coords') || '55.72711, 42.099609');
+			var lat=parseFloat(lat__lng.split(',')[0]);
+			var lng=parseFloat(lat__lng.split(',')[1]);
+			var zoom=parseInt($element.attr('data-zoom') || 4);
+			var width=($element.attr('data-width') || '100%');
+			if(parseInt(width) == width) width+='px';
+			var height=($element.attr('data-height') || 600);
+			if(parseInt(height) == height) height+='px';
+			// скрываем детей, создаем бокс для карты
+			$element.children().hide();
+			var $gmap_box = $(document.createElement('div')).addClass('GMapBox').attr({'data-gmap2index':gmap2_index}).width(width).height(height).prependTo($element);
+			// создаем карту
+			window.evGMapping_GMap2[gmap2_index] = new GMap2($gmap_box[0]);
+			window.evGMapping_GMap2[gmap2_index].setCenter(new GLatLng(lat, lng), zoom);
+			// управление картой
+			window.evGMapping_GMap2[gmap2_index].addControl(new GMapTypeControl());
+			window.evGMapping_GMap2[gmap2_index].enableScrollWheelZoom();
+			// window.evGMapping_GMap2[gmap2_index].addMapType(G_PHYSICAL_MAP);
+			// window.evGMapping_GMap2[gmap2_index].removeMapType(G_HYBRID_MAP);
+			window.evGMapping_GMap2[gmap2_index].addControl(new GLargeMapControl3D());
+			// нестандартная кнопка со слоем
+			$element.children('div.GMcontrol').each(function(){
+				var $control_element=$(this);
+				// параметры
+				var group_title=$control_element.attr('data-title');
+				// чтобы создать подкласс элемента GControl, 
+				// задаем GControl в качестве объекта-прототипа
+				// и реализуем два его метода: initialize и getDefaultPosition
+				var GroupControl=function(){}
+				GroupControl.prototype = new GControl();
+				GroupControl.prototype.initialize = function(map) {
+					var width=(parseInt($control_element.attr('data-width')) || 197);
+					var $container=$(document.createElement('div')).addClass('GMgroupControl').width(width).
+						append($(document.createElement('div')).addClass('brd'));
+					var $btn=$(document.createElement('div')).addClass('btn').text(group_title).
+						appendTo($container.children('div.brd'));
+					if($control_element.children('div.GMgroup').length){
+						var $ul=$(document.createElement('ul')).
+							appendTo($(document.createElement('div')).addClass('ul').
+								appendTo($container.children('div.brd')));
+						$control_element.children('div.GMgroup').each(function(){
+							var $group=$(this);
+							var title=$group.attr('data-title');
+							var $a=$(document.createElement('a')).attr({href:'#'}).text(title).
+								appendTo($(document.createElement('li')).appendTo($ul));
+							// обработчик клика по ссылке
+							$a.bind('click',function(evt){
+								evt.preventDefault();
+								var lat__lng=$group.attr('data-coords');
+								var lat=parseFloat(lat__lng.split(',')[0]);
+								var lng=parseFloat(lat__lng.split(',')[1]);
+								var zoom=parseInt($group.attr('data-zoom'));
+								map.setCenter(new GLatLng(lat, lng), zoom);
+							})
+						})
+						// обработчик mouseover mouseout на кнопке группы
+						window['evGMapping_hidegroup_function'+i]=function(){$container.removeClass('GMgroupControlActive');}
+						$container.bind('mouseover mouseout', function(evt){
+							if(evt.type=='mouseover'){
+								try{clearTimeout(window['evGMapping_hidegroup_timer'+i])}catch(e){}
+								$container.addClass('GMgroupControlActive');
+							}else if(evt.type=='mouseout'){
+								window['evGMapping_hidegroup_timer'+i]=setTimeout('window.evGMapping_hidegroup_function'+i+'()',100);
+							}
+						});
+						$btn.bind('click',function(){
+							$container.toggleClass('GMgroupControlActive');
+						})
+					}
+					map.getContainer().appendChild($container[0]);
+				  return $container[0];
+				}
+				GroupControl.prototype.getDefaultPosition = function() {
+					var corner;
+					if($control_element.attr('data-right-top')){
+						var x__y=$control_element.attr('data-right-top');
+						corner=G_ANCHOR_TOP_RIGHT;
+					}else if($control_element.attr('data-left-top')){
+						var x__y=$control_element.attr('data-left-top');
+						corner=G_ANCHOR_TOP_LEFT;
+					}else if($control_element.attr('data-left-bottom')){
+						var x__y=$control_element.attr('data-left-bottom');
+						corner=G_ANCHOR_BOTTOM_LEFT;
+					}else if($control_element.attr('data-right-bottom')){
+						var x__y=$control_element.attr('data-right-bottom');
+						corner=G_ANCHOR_BOTTOM_RIGHT;
+					}else{
+						var x__y='7,33';
+						corner=G_ANCHOR_TOP_RIGHT;
+					}
+					var x=parseInt(x__y.split(',')[0]);
+					var y=parseInt(x__y.split(',')[1]);
+					return new GControlPosition(corner, new GSize(x, y));
+				}
+				// задаем первичные стили
+				if(i==0 && typeof window['evGMapping_css_control_done']=='undefined'){
+					window['evGMapping_css_control_done']=true;
+					$.evCSSrule('div.GMapBox div.GMgroupControl', 'background: white;border: 1px solid black;')
+					$.evCSSrule('div.GMapBox div.GMgroupControl div.brd', 'border-style: solid;border-width: 1px;border-color: #fff #b0b0b0 #b0b0b0 #fff;font: 12px "Arial", sans-serif;')
+					$.evCSSrule('div.GMapBox div.GMgroupControl div.brd div.btn', 'text-align: center;cursor: pointer;height: 16px;')
+					$.evCSSrule('div.GMapBox div.GMgroupControl div.brd div.ul', 'display: none;margin: -1px 4px 4px;padding: 4px 0 2px;border-top: 1px solid #ddd;')
+					$.evCSSrule('div.GMapBox div.GMgroupControlActive div.brd div.ul', 'display: block;')
+					$.evCSSrule('div.GMapBox div.GMgroupControl div.brd div.ul ul', 'margin: 0 4px 0 8px;padding: 0;list-style-type: disc;font-size: 11px;line-height: 1em;')
+					$.evCSSrule('div.GMapBox div.GMgroupControl div.brd div.ul ul', 'overflow: auto;')
+					$.evCSSrule('div.GMapBox div.GMgroupControl div.brd div.ul ul li', 'margin: 4px 0;padding: 0;background: none;')
+					$.evCSSrule('div.GMapBox div.GMgroupControl div.brd div.ul ul li:before', 'content: "●";font-size: 9px;padding-right: 6px;')
+					$.evCSSrule('div.GMapBox div.GMgroupControl div.brd div.ul ul li a', 'color: red;')
+				}
+				window.evGMapping_GMap2[gmap2_index].addControl(new GroupControl());
+			})
+			// создаем метод для создания иконок
+			var get_icon_function=function($e, base_icon){
+				var icon=new GIcon(base_icon || G_DEFAULT_ICON);
+				if($e.attr('data-icon-png'))
+					icon.image=$e.attr('data-icon-png');
+				if($e.attr('data-icon-gif'))
+					icon.printImage=$e.attr('data-icon-gif');
+				if($e.attr('data-icon-size'))
+					icon.iconSize=new GSize(parseInt($e.attr('data-icon-size').split(',')[0]), parseInt($e.attr('data-icon-size').split(',')[1]));
+				if($e.attr('data-icon-anchor'))
+					icon.iconAnchor=new GPoint(parseInt($e.attr('data-icon-anchor').split(',')[0]), parseInt($e.attr('data-icon-anchor').split(',')[1]));
+				if($e.attr('data-icon-map')){
+					var map=[];
+					for(var j=0; j<$e.attr('data-icon-map').split(',').length; j++)
+						map[map.length]=parseInt($e.attr('data-icon-map').split(',')[j]);
+					icon.imageMap=map;
+				}
+				if($e.attr('data-shadow-png'))
+					icon.shadow=$e.attr('data-shadow-png');
+				if($e.attr('data-shadow-gif'))
+					icon.printShadow=$e.attr('data-shadow-gif');
+				if($e.attr('data-shadow-size'))
+					icon.shadowSize=new GSize(parseInt($e.attr('data-shadow-size').split(',')[0]), parseInt($e.attr('data-shadow-size').split(',')[1]));
+				return icon;
+			}
+			// создаем общую иконку для карты в целом
+			var base_icon=get_icon_function($element);
+			// кластерер и маркеры
+			$element.find('div.GMgroup').each(function(){
+				var $group_element=$(this);
+				var max_visible_markers = parseInt($group_element.attr('data-max-visible-markers'));
+				var min_markers_per_cluster = parseInt($group_element.attr('data-min-markers-per-cluster'));
+				var clusterer = false;
+				var group_icon=get_icon_function($group_element, base_icon);
+				if(max_visible_markers && min_markers_per_cluster){
+					try{
+						clusterer = new Clusterer(window.evGMapping_GMap2[gmap2_index]);
+					}catch(e){
+						alert('You need to download and include Clusterer2.js\n\nhttp://www.acme.com/javascript/Clusterer2.js');
+					}
+					clusterer.SetMaxVisibleMarkers(max_visible_markers);
+					clusterer.SetMinMarkersPerCluster(min_markers_per_cluster);
+					if($group_element.data()){}
+					clusterer.SetIcon(group_icon);
+				}
+				$group_element.children('div.GMpoint').each(function(){
+					var $point_element=$(this);
+					var lat__lng=$point_element.attr('data-coords');
+					var lat=parseFloat(lat__lng.split(',')[0]);
+					var lng=parseFloat(lat__lng.split(',')[1]);
+					var point = new GLatLng(lat, lng);
+					var point_icon = get_icon_function($point_element, group_icon);
+					var marker = new GMarker(point, {icon: point_icon});
+					if(clusterer){
+						clusterer.AddMarker(marker, 'title');
+					}else{
+						window.evGMapping_GMap2[gmap2_index].addOverlay(marker);
+					}
+					var html=$point_element.children('div.htmlInfo').html();
+					if(html){
+						GEvent.addListener(marker, "click", (function(marker, html){
+							return function(){
+								marker.openInfoWindowHtml(html);
+							}
+						})(marker, html));
+					}
+				})
+			});
+		})
+	},
 	evSboxDecorate: function(hash){
 		// hash: style skipFirst submitForm delay scroll maxHeight destroy redraw
 		this.each(function(j){
@@ -302,8 +585,16 @@ $.fn.extend({
 					if( hash.style ){
 						$wrap.css({position:'relative', display:'block'});
 					}
-					$select.bind('change', function(){
-						$select.evSboxDecorate({redraw:true});
+					$select.bind('change disable enable', function(evt){
+						if( evt.type=='change' ){
+							$select.evSboxDecorate({redraw:true});
+						}else if( evt.type=='disable' ){
+							$select[0].disabled=true;
+							$wrap.addClass('disabled');
+						}else if( evt.type=='enable' ){
+							$select[0].disabled=false;
+							$wrap.removeClass('disabled');
+						}
 					});
 				}
 				var $opts_scroll=$(document.createElement('span')).addClass('scroll');
@@ -332,6 +623,9 @@ $.fn.extend({
 						if( hash.submitForm ){
 							$select.parents('form').eq(0).submit();
 						}
+						if( $.browser.msie ){
+							$(document).trigger('click');
+						}
 					}
 				}
 				var $first;
@@ -339,7 +633,8 @@ $.fn.extend({
 					var option_text=$(this).text();
 					var option_value=$(this).val();
 					if(i==0){
-						$first=$(document.createElement('b')).addClass('first').text(option_text).prependTo($wrap);
+						$first=$(document.createElement('span')).text(option_text).
+							appendTo($(document.createElement('b')).addClass('first').prependTo($wrap));
 					}
 					if(i>0 || !hash.skipFirst){
 						var $item=$(document.createElement('a')).attr({href:'#', rel:option_value}).text(option_text);
@@ -378,6 +673,7 @@ $.fn.extend({
 					$darr.bind('click',function(evt){
 						evt.preventDefault();
 						evt.stopPropagation();
+						if( $(this).parent('span.sboxDecorated').hasClass('disabled') ){return}
 						$(this).blur();
 						var $current_sbox=$(this).parent();
 						var $current_opts=$current_sbox.children('span.options');
@@ -460,7 +756,7 @@ $.fn.extend({
 					// set body click listener, it will hide the shown dropdown list
 					if(typeof window['evSboxDecorate_document_click_listener']=='undefined'){
 						window['evSboxDecorate_document_click_listener']=true;
-						$(document).click(function(evt){
+						$(document).bind('click', function(evt){
 							// check if there is any
 							var $active_sbox=$('span.sboxDecoratedActive');
 							if($active_sbox.length){
@@ -541,4 +837,4 @@ $.fn.extend({
 		})
 		return this;
 	}
-})
+});
