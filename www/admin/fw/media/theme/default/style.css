@@ -1,6 +1,6 @@
 body {background: #e8e8ea url(img/body.tail.png);}
 
-form.adminForm p {font: 13px/16px 'Arial', sans-serif;color: #444546;}
+form.adminForm {font: 13px/16px 'Arial', sans-serif;color: #444546;}
 form.adminForm p span.title {display: block;padding-bottom: 4px;}
 form.adminForm p span.tag input[type="text"],
 form.adminForm p span.tag input[type="password"] {margin: 0;padding: 6px 11px;height: 15px;border-style: inset;border-width: 2px;font: 13px/15px 'Arial', sans-serif;color: #444546;}
