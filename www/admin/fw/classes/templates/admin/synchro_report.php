@@ -1,69 +1,68 @@
 <?php
 
 $GLOBALS['show_syncrho_complete']=true;
+Compressor::addJs('/admin/fw/media/js/jquery.js',false);
+Compressor::addJs('/admin/fw/media/js/jquery.utils.js',true);
 
-?>
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 //EN" "http://www.w3.org/TR/html4/strict.dtd">
+$result='<!DOCTYPE html>
 <html>
 	<head>
 		<title>synchro report</title>
 		<style type="text/css">
-		.create p, .change p {display: none;white-space: pre;padding: 10px 20px;}
-		.create p {background: #fef;}
-		.create a {color: #939}
-		.change p {background: #eef;}
-		.change a {color: #339}
-		.extracols .tabname {font-size: 120%;}
-		.extracols .checkall {font-size: 80%; position: relative; top: -2px; left: 10px;}
-		.extracols span {display: none;}
-		.extracols a {font-size: 80%; position: relative; top: -2px;}
-		.extra label {font-size: 120%; color: #933;}
-		</style>
-		<script type="text/javascript" src="/admin/media/js/jquery.js"></script>
-		<script type="text/javascript" src="/admin/media/js/jquery.utils.js"></script>
-	</head>
-	<body>
-		<p><small><a style="color:blue;font-size:3em;line-height:1em;text-decoration:none;font-weight:bold;" href="<?php echo DOMAIN_PATH; ?>/admin/">&lt;&lt;&nbsp;&lt;&lt;&nbsp;&lt;&lt;&nbsp;&lt;&lt;&nbsp;&lt;&lt;&nbsp;&lt;&lt;&nbsp;</a></small></p>
-		<?php echo synchroReportCreatedTables($report); ?>
-		<?php echo synchroReportChangedTables($report); ?>
-		<?php echo synchroReportExtraColumns($report); ?>
-		<?php echo synchroReportExtraTables($report); ?>
-		<?php echo synchroReportComplete(); ?>
-		<script type="text/javascript">
-		<!--
-		function showHideCreateTable(id){
-			showHide(id);
-		}
+			.back {color:blue;font-size:3em;line-height:1em;text-decoration:none;font-weight:bold;}
+			.create p, .change p {display: none;white-space: pre;padding: 10px 20px;}
+			.create p {background: #fef;}
+			.create a {color: #939}
+			.change p {background: #eef;}
+			.change a {color: #339}
+			.extracols .tabname {font-size: 120%;}
+			.extracols .checkall {font-size: 80%; position: relative; top: -2px; left: 10px;}
+			.extracols span {display: none;}
+			.extracols a {font-size: 80%; position: relative; top: -2px;}
+			.extra label {font-size: 120%; color: #933;}
+		</style>'
+		. Compressor::outJs('/media/js/')
+		. '
+		<script type="text/javascript"><!--
+			function showHideCreateTable(id){
+				showHide(id);
+			}
 
-		function showHideColumnsChange(id){
-			showHide(id);
-		}
+			function showHideColumnsChange(id){
+				showHide(id);
+			}
 
-		function showHideColumn(id){
-			showHide(id,'inline');
-		}
+			function showHideColumn(id){
+				showHide(id,\'inline\');
+			}
 
-		function showHide(id){
-			var dtype=arguments[1] || 'block';
-			var display=($('#'+id)[0].style.display!=dtype)?dtype:'none';
-			$('#'+id)[0].style.display=display;
-		}
+			function showHide(id){
+				var dtype=arguments[1] || \'block\';
+				var display=($(\'#\'+id)[0].style.display!=dtype)?dtype:\'none\';
+				$(\'#\'+id)[0].style.display=display;
+			}
 
-		function checkAllCols(table){
-			var form=document.forms['extracols_'+ table];
-			for(var i in form.elements){
-				if(form.elements[i].type=='checkbox'){
-					form.elements[i].checked=true;
+			function checkAllCols(table){
+				var form=document.forms[\'extracols_\'+ table];
+				for(var i in form.elements){
+					if(form.elements[i].type==\'checkbox\'){
+						form.elements[i].checked=true;
+					}
 				}
 			}
-		}
-		//-->
-		</script>
+		//--></script>
+	</head>
+	<body>
+		<p><small><a class="back" href="'.DOMAIN_PATH.'/admin/">&lt;&lt;&nbsp;&lt;&lt;&nbsp;&lt;&lt;&nbsp;&lt;&lt;&nbsp;&lt;&lt;&nbsp;&lt;&lt;&nbsp;</a></small></p>'
+		. synchroReportCreatedTables($report)
+		. synchroReportCreatedTables($report)
+		. synchroReportChangedTables($report)
+		. synchroReportExtraColumns($report)
+		. synchroReportExtraTables($report)
+		. synchroReportComplete()
+		. '
 	</body>
-</html>
-
-<?php
+</html>';
 
 function synchroReportCreatedTables($report){
 	if(is_array($report['tables'])){
@@ -215,4 +214,3 @@ function arr2str($arr){
 	}
 	return $result;
 }
-?>
