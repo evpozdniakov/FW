@@ -209,11 +209,7 @@ var A={
 				})
 			}
 			$('#controls button.delete').bind('click', function(evt){
-			    evt.preventDefault();
-			    if( confirm('Удалить безвозвратно?') ){
-			        $miez_form.find('input[name="delete"]').val(1);
-			        $miez_form[0].submit();
-			    }
+		        return confirm('Удалить безвозвратно?');
 			})
 			if(typeof Shadowbox=='object'){
 				Shadowbox.init({
